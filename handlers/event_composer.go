@@ -14,12 +14,13 @@ type SourceMatcher interface {
 	Match(sources []string) bool
 }
 
+// EventComposer composes the events with the same key when the sources match the criteria given by SourceMatcher
 type EventComposer struct {
 	storage       storage.EventStore
 	sourceMatcher SourceMatcher
 }
 
-func (e *EventComposer) Process(ctx context.Context, in event.Message, next func(ctx context.Context, in event.Message) error) error {
+func (e *EventComposer) Process(ctx context.Context, in event.Message, next CallNext) error {
 	// persist input message by key & source
 	err := e.storage.Persist(in.GetKey(), in.GetSource(), in.GetContent())
 	if err != nil {
@@ -27,7 +28,7 @@ func (e *EventComposer) Process(ctx context.Context, in event.Message, next func
 	}
 
 	// validate sources
-	messages, err := e.storage.LookUp(in.GetKey())
+	messages, err := e.storage.LookUpByKey(in.GetKey())
 	if err != nil {
 		return err
 	}
@@ -51,5 +52,5 @@ func (e *EventComposer) Process(ctx context.Context, in event.Message, next func
 
 	composedInput := event.NewMessage(in.GetKey(), "composed-event", string(composedContent))
 
-	return next(ctx, composedInput)
+	return next.Call(ctx, composedInput)
 }
