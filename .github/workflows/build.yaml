@@ -1,0 +1,56 @@
+name: go-tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types:
+      - edited
+      - opened
+      - reopened
+      - synchronize
+
+jobs:
+  build:
+    name: go-tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ "1.21" ]
+    steps:
+      - name: set up Golang
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go }}
+        id: go
+
+      - name: check out code into the Go module directory
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: generate mocks
+        run: make generate
+
+      - name: setup go modules
+        run: go clean -modcache; go mod tidy; go mod download; go mod verify
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: --timeout=5m --modules-download-mode=readonly
+          skip-pkg-cache: true
+          skip-build-cache: true
+
+      - name: test and generate code coverage
+        run: go test -v -race -coverprofile=./cover.out -covermode=atomic ./...
+
+      - name: check test coverage
+        uses: vladopajic/go-test-coverage@v2
+        with:
+          profile: cover.out
+          local-prefix: github.com/KeluDiao/event-driver
+          threshold-file: 0
+          threshold-package: 30
+          threshold-total: 30

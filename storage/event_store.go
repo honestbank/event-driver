@@ -11,5 +11,6 @@ import (
 // 3. try to make the DB care-free for users
 type EventStore interface {
 	Persist(key, source, content string) error
-	LookUp(key string) ([]event.Message, error)
+	LookUp(key, source string) (event.Message, error)
+	LookUpByKey(key string) ([]event.Message, error)
 }
