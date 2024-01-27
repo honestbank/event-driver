@@ -1,4 +1,4 @@
-package handlers_test
+package cache_test
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/lukecold/event-driver/event"
-	"github.com/lukecold/event-driver/handlers"
+	"github.com/lukecold/event-driver/handlers/cache"
 	"github.com/lukecold/event-driver/mocks"
 	"github.com/lukecold/event-driver/storage"
 )
@@ -21,17 +21,17 @@ func TestCache(t *testing.T) {
 		input2 := event.NewMessage("key", "source", "content2")
 
 		ctrl := gomock.NewController(t)
-		cacheHitResolver := mocks.NewMockCacheHitResolver(ctrl)
+		conflictResolver := mocks.NewMockConflictResolver(ctrl)
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := storage.NewInMemoryStore()
 
 		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).AnyTimes()
-		cacheHitResolver.EXPECT().Resolve(ctx, input1, callNext).Times(1) // trigger cacheHitResolver when cache hit
+		conflictResolver.EXPECT().Resolve(ctx, input1, callNext).Times(1) // trigger conflictResolver when cache hit
 
-		cache := handlers.NewCache(eventStore, cacheHitResolver)
-		err := cache.Process(ctx, input1, callNext)
+		handler := cache.New(eventStore, conflictResolver)
+		err := handler.Process(ctx, input1, callNext)
 		assert.NoError(t, err)
-		err = cache.Process(ctx, input2, callNext)
+		err = handler.Process(ctx, input2, callNext)
 		assert.NoError(t, err)
 	})
 
@@ -41,16 +41,16 @@ func TestCache(t *testing.T) {
 		input2 := event.NewMessage("key2", "source", "content2")
 
 		ctrl := gomock.NewController(t)
-		cacheHitResolver := mocks.NewMockCacheHitResolver(ctrl)
+		conflictResolver := mocks.NewMockConflictResolver(ctrl)
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := storage.NewInMemoryStore()
 
 		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).AnyTimes()
 
-		cache := handlers.NewCache(eventStore, cacheHitResolver)
-		err := cache.Process(ctx, input1, callNext)
+		handler := cache.New(eventStore, conflictResolver)
+		err := handler.Process(ctx, input1, callNext)
 		assert.NoError(t, err)
-		err = cache.Process(ctx, input2, callNext)
+		err = handler.Process(ctx, input2, callNext)
 		assert.NoError(t, err)
 	})
 
@@ -60,17 +60,17 @@ func TestCache(t *testing.T) {
 		input2 := event.NewMessage("key", "source", "content2")
 
 		ctrl := gomock.NewController(t)
-		cacheHitResolver := mocks.NewMockCacheHitResolver(ctrl)
+		conflictResolver := mocks.NewMockConflictResolver(ctrl)
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := storage.NewInMemoryStore()
 
 		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).AnyTimes()
-		cacheHitResolver.EXPECT().Resolve(ctx, input1, callNext).Return(errors.New("test"))
+		conflictResolver.EXPECT().Resolve(ctx, input1, callNext).Return(errors.New("test"))
 
-		cache := handlers.NewCache(eventStore, cacheHitResolver)
-		err := cache.Process(ctx, input1, callNext)
+		handler := cache.New(eventStore, conflictResolver)
+		err := handler.Process(ctx, input1, callNext)
 		assert.NoError(t, err)
-		err = cache.Process(ctx, input2, callNext)
+		err = handler.Process(ctx, input2, callNext)
 		assert.Error(t, err)
 	})
 
@@ -79,14 +79,14 @@ func TestCache(t *testing.T) {
 		input := event.NewMessage("key", "source", "content")
 
 		ctrl := gomock.NewController(t)
-		cacheHitResolver := mocks.NewMockCacheHitResolver(ctrl)
+		conflictResolver := mocks.NewMockConflictResolver(ctrl)
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := storage.NewInMemoryStore()
 
 		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).Return(errors.New("test"))
 
-		cache := handlers.NewCache(eventStore, cacheHitResolver)
-		err := cache.Process(ctx, input, callNext)
+		handler := cache.New(eventStore, conflictResolver)
+		err := handler.Process(ctx, input, callNext)
 		assert.Error(t, err)
 	})
 
@@ -95,15 +95,15 @@ func TestCache(t *testing.T) {
 		input := event.NewMessage("key1", "source", "content")
 
 		ctrl := gomock.NewController(t)
-		cacheHitResolver := mocks.NewMockCacheHitResolver(ctrl)
+		conflictResolver := mocks.NewMockConflictResolver(ctrl)
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := mocks.NewMockEventStore(ctrl)
 
 		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).AnyTimes()
 		eventStore.EXPECT().LookUp(gomock.Any(), gomock.Any()).Return(nil, errors.New("test")) // cache not hit on the first call
 
-		cache := handlers.NewCache(eventStore, cacheHitResolver)
-		err := cache.Process(ctx, input, callNext)
+		handler := cache.New(eventStore, conflictResolver)
+		err := handler.Process(ctx, input, callNext)
 		assert.Error(t, err)
 	})
 
@@ -112,7 +112,7 @@ func TestCache(t *testing.T) {
 		input := event.NewMessage("key", "source", "content")
 
 		ctrl := gomock.NewController(t)
-		cacheHitResolver := mocks.NewMockCacheHitResolver(ctrl)
+		conflictResolver := mocks.NewMockConflictResolver(ctrl)
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := mocks.NewMockEventStore(ctrl)
 
@@ -120,8 +120,8 @@ func TestCache(t *testing.T) {
 		eventStore.EXPECT().LookUp(gomock.Any(), gomock.Any()).Return(nil, nil) // cache not hit on the first call
 		eventStore.EXPECT().Persist("key", "source", "content").Return(errors.New("test"))
 
-		cache := handlers.NewCache(eventStore, cacheHitResolver)
-		err := cache.Process(ctx, input, callNext)
+		handler := cache.New(eventStore, conflictResolver)
+		err := handler.Process(ctx, input, callNext)
 		assert.Error(t, err)
 	})
 }

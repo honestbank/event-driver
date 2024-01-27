@@ -1,26 +1,21 @@
-package handlers
+package joiner
 
 import (
 	"context"
 	"encoding/json"
 
 	"github.com/lukecold/event-driver/event"
+	"github.com/lukecold/event-driver/handlers"
 	"github.com/lukecold/event-driver/storage"
 )
 
-// TODO: implement me
-// requirement: be able to match (AND|OR|()) operations
-type SourceMatcher interface {
-	Match(sources []string) bool
+// Joiner joins the events with the same key when the sources match the criteria given by Condition
+type Joiner struct {
+	storage   storage.EventStore
+	condition Condition
 }
 
-// EventComposer composes the events with the same key when the sources match the criteria given by SourceMatcher
-type EventComposer struct {
-	storage       storage.EventStore
-	sourceMatcher SourceMatcher
-}
-
-func (e *EventComposer) Process(ctx context.Context, in event.Message, next CallNext) error {
+func (e *Joiner) Process(ctx context.Context, in event.Message, next handlers.CallNext) error {
 	// persist input message by key & source
 	err := e.storage.Persist(in.GetKey(), in.GetSource(), in.GetContent())
 	if err != nil {
@@ -36,21 +31,21 @@ func (e *EventComposer) Process(ctx context.Context, in event.Message, next Call
 	for _, message := range messages {
 		persistedSources = append(persistedSources, message.GetSource())
 	}
-	if !e.sourceMatcher.Match(persistedSources) {
+	if !e.condition.Match(persistedSources) {
 		return nil
 	}
 
-	// compose
+	// join sources
 	contentBySource := make(map[string]string)
 	for _, message := range messages {
 		contentBySource[message.GetSource()] = message.GetContent()
 	}
-	composedContent, err := json.Marshal(contentBySource)
+	jointContent, err := json.Marshal(contentBySource)
 	if err != nil {
 		return err
 	}
 
-	composedInput := event.NewMessage(in.GetKey(), "composed-event", string(composedContent))
+	jointEvent := event.NewMessage(in.GetKey(), "composed-event", string(jointContent))
 
-	return next.Call(ctx, composedInput)
+	return next.Call(ctx, jointEvent)
 }
