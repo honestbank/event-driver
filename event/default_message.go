@@ -25,3 +25,15 @@ func (m *DefaultMessage) GetSource() string {
 func (m *DefaultMessage) GetContent() string {
 	return m.content
 }
+
+func (m *DefaultMessage) SetKey(key string) {
+	m.key = key
+}
+
+func (m *DefaultMessage) SetSource(source string) {
+	m.source = source
+}
+
+func (m *DefaultMessage) SetContent(content string) {
+	m.content = content
+}
