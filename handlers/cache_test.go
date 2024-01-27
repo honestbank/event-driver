@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/KeluDiao/event-driver/event"
-	"github.com/KeluDiao/event-driver/handlers"
-	"github.com/KeluDiao/event-driver/mocks"
-	"github.com/KeluDiao/event-driver/storage"
+	"github.com/lukecold/event-driver/event"
+	"github.com/lukecold/event-driver/handlers"
+	"github.com/lukecold/event-driver/mocks"
+	"github.com/lukecold/event-driver/storage"
 )
 
 func TestCache(t *testing.T) {

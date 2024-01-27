@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/KeluDiao/event-driver/event"
+	"github.com/lukecold/event-driver/event"
 )
 
 type InMemoryStore map[string]map[string]string // key -> source -> content

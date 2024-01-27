@@ -3,8 +3,8 @@ package pipeline
 import (
 	"context"
 
-	"github.com/KeluDiao/event-driver/event"
-	"github.com/KeluDiao/event-driver/handlers"
+	"github.com/lukecold/event-driver/event"
+	"github.com/lukecold/event-driver/handlers"
 )
 
 type Pipeline interface {
