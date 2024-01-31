@@ -1,0 +1,61 @@
+package transformer_test
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/lukecold/event-driver/event"
+	"github.com/lukecold/event-driver/handlers/transformer"
+)
+
+const (
+	key     = "test-key"
+	source  = "test-source"
+	content = "test-content"
+)
+
+func TestIdentityRule(t *testing.T) {
+	identity := transformer.Identity()
+	message := event.NewMessage(key, source, content)
+
+	assert.Equal(t, message, identity.Transform(message))
+}
+
+func TestRenameSourcesRule(t *testing.T) {
+	aliasMap := map[string][]string{
+		source: {"alias1", "alias2"},
+	}
+	renameSources, err := transformer.RenameSources(aliasMap)
+	assert.NoError(t, err)
+
+	inputSourceToTransformedSource := map[string]string{
+		"alias1":    source,
+		"alias2":    source,
+		"not_alias": "not_alias",
+	}
+
+	for inputSource, expectedTransformedSource := range inputSourceToTransformedSource {
+		transformed := renameSources.Transform(event.NewMessage(key, inputSource, content))
+		assert.Equal(t, key, transformed.GetKey())
+		assert.Equal(t, expectedTransformedSource, transformed.GetSource())
+		assert.Equal(t, content, transformed.GetContent())
+	}
+}
+
+func TestEraseContentFromSources(t *testing.T) {
+	eraseContentFromSources := transformer.EraseContentFromSources("source1", "source2")
+
+	inputSourceToTransformedContent := map[string]string{
+		"source1": "",
+		"source2": "",
+		"source3": content,
+	}
+
+	for inputSource, expectedTransformedContent := range inputSourceToTransformedContent {
+		transformed := eraseContentFromSources.Transform(event.NewMessage(key, inputSource, content))
+		assert.Equal(t, key, transformed.GetKey())
+		assert.Equal(t, inputSource, transformed.GetSource())
+		assert.Equal(t, expectedTransformedContent, transformed.GetContent())
+	}
+}

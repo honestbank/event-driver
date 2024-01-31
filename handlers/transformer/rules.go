@@ -52,4 +52,18 @@ func RenameSources(aliasMap map[string][]string) (Rule, error) {
 	}, nil
 }
 
-//TODO: add more rules
+// EraseContentFromSources returns a Rule that erases the message content if source is in the list.
+func EraseContentFromSources(sources ...string) Rule {
+	shouldErase := make(map[string]bool)
+	for _, source := range sources {
+		shouldErase[source] = true
+	}
+
+	return func(message event.Message) event.Message {
+		if shouldErase[message.GetSource()] {
+			message.SetContent("")
+		}
+
+		return message
+	}
+}
