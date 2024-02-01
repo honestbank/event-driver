@@ -1,14 +1,6 @@
 name: go-tests
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    types:
-      - edited
-      - opened
-      - reopened
-      - synchronize
+on: [workflow_call]
 
 jobs:
   build:
@@ -51,6 +43,6 @@ jobs:
         with:
           profile: cover.out
           local-prefix: github.com/lukecold/event-driver
-          threshold-file: 0
-          threshold-package: 30
-          threshold-total: 30
+          threshold-file: 80
+          threshold-package: 80
+          threshold-total: 80

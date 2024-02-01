@@ -1,0 +1,22 @@
+name: semantic-release
+
+on: [workflow_call]
+
+release:
+  name: semantic-release
+  runs-on: ubuntu-latest
+  needs: [ go-tests ]
+  steps:
+    - name: checkout
+      uses: actions/checkout@v4
+
+    - name: semantic release
+      uses: cycjimmy/semantic-release-action@v4
+      with:
+        branches: ['main']
+        extra_plugins: |
+          @semantic-release/git
+          @semantic-release/exec
+          @semantic-release/changelog
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
