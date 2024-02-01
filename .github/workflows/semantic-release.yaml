@@ -7,10 +7,10 @@ release:
   runs-on: ubuntu-latest
   needs: [ go-tests ]
   steps:
-    - name: Checkout
+    - name: checkout
       uses: actions/checkout@v4
 
-    - name: Semantic Release
+    - name: semantic release
       uses: cycjimmy/semantic-release-action@v4
       with:
         branches: ['main']

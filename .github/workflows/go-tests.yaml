@@ -43,6 +43,6 @@ jobs:
         with:
           profile: cover.out
           local-prefix: github.com/lukecold/event-driver
-          threshold-file: 70
-          threshold-package: 70
-          threshold-total: 70
+          threshold-file: 80
+          threshold-package: 80
+          threshold-total: 80

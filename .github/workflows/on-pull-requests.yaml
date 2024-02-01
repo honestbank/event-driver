@@ -1,3 +1,5 @@
+name: pull-requests
+
 on:
   pull_request:
     types:
