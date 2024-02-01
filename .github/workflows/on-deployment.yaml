@@ -10,4 +10,4 @@ jobs:
 
   deploy:
     needs: [ tests ]
-    uses: ./.github/workflows/semantic-release.yaml
+    uses: ./.github/workflows/release.yaml
