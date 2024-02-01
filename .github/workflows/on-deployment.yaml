@@ -4,8 +4,8 @@ on:
 
 jobs:
   tests:
-    uses: ./.github/workflows/go-tests.yml
+    uses: ./.github/workflows/go-tests.yaml
 
   deploy:
     needs: [ tests ]
-    uses: ./.github/workflows/semantic-release.yml
+    uses: ./.github/workflows/semantic-release.yaml
