@@ -1,0 +1,11 @@
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  tests:
+    uses: ./.github/workflows/go-tests.yml
+
+  deploy:
+    needs: [ tests ]
+    uses: ./.github/workflows/semantic-release.yml

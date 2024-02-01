@@ -1,0 +1,11 @@
+on:
+  pull_request:
+    types:
+      - edited
+      - opened
+      - reopened
+      - synchronize
+
+jobs:
+  tests:
+    uses: ./.github/workflows/go-tests.yml
