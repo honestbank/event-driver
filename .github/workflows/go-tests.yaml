@@ -27,13 +27,17 @@ jobs:
       - name: setup go modules
         run: go clean -modcache; go mod tidy; go mod download; go mod verify
 
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          args: --timeout=5m --modules-download-mode=readonly
-          skip-pkg-cache: true
-          skip-build-cache: true
+      - name: install golangci-lint
+        # Install golangci-lint from source instead of using
+        # golangci-lint-action to ensure the golangci-lint binary is built with
+        # the same Go version we're targeting.
+        # Avoids incompatibility issues such as:
+        # - https://github.com/golangci/golangci-lint/issues/2922
+        # - https://github.com/golangci/golangci-lint/issues/2673
+        # - https://github.com/golangci/golangci-lint-action/issues/442
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2
+      - name: run golangci-lint
+        run: golangci-lint run --version --verbose --out-format=github-actions
 
       - name: test and generate code coverage
         run: go test -v -race -coverprofile=./cover.out -covermode=atomic ./...
