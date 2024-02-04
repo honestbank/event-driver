@@ -9,13 +9,22 @@ import (
 	"github.com/lukecold/event-driver/storage"
 )
 
-// Joiner joins the events with the same key when the sources match the criteria given by Condition
-type Joiner struct {
-	storage   storage.EventStore
+// joiner implements handlers.Handler that joins the events with the same key
+// when the sources match the criteria given by Condition.
+// The output is of JSON format `{"source1":"content1","source2":"content2",...}`.
+type joiner struct {
 	condition Condition
+	storage   storage.EventStore
 }
 
-func (e *Joiner) Process(ctx context.Context, in event.Message, next handlers.CallNext) error {
+func New(condition Condition, storage storage.EventStore) *joiner {
+	return &joiner{
+		condition: condition,
+		storage:   storage,
+	}
+}
+
+func (e *joiner) Process(ctx context.Context, in event.Message, next handlers.CallNext) error {
 	// persist input message by key & source
 	err := e.storage.Persist(in.GetKey(), in.GetSource(), in.GetContent())
 	if err != nil {
@@ -31,7 +40,7 @@ func (e *Joiner) Process(ctx context.Context, in event.Message, next handlers.Ca
 	for _, message := range messages {
 		persistedSources = append(persistedSources, message.GetSource())
 	}
-	if !e.condition.Match(persistedSources) {
+	if !e.condition.Evaluate(persistedSources) {
 		return nil
 	}
 

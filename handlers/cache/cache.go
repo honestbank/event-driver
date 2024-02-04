@@ -8,7 +8,8 @@ import (
 	"github.com/lukecold/event-driver/storage"
 )
 
-// ConflictResolver resolves the case when the input matches an existing record in the cache
+// ConflictResolver implements handlers.Handler that resolves the case
+// when the input matches an existing record in the cache.
 type ConflictResolver interface {
 	Resolve(ctx context.Context, in event.Message, next handlers.CallNext) error
 }

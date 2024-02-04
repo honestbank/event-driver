@@ -6,6 +6,8 @@ import (
 	"github.com/lukecold/event-driver/event"
 )
 
+// Rule defines a transformer rule that transforms the input event.Message.
+// The input event.Message might be updated by the rule.
 type Rule func(event.Message) event.Message
 
 func (r Rule) Transform(in event.Message) event.Message {
