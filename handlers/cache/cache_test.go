@@ -100,7 +100,7 @@ func TestCache(t *testing.T) {
 		eventStore := mocks.NewMockEventStore(ctrl)
 
 		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).AnyTimes()
-		eventStore.EXPECT().LookUp(gomock.Any(), gomock.Any()).Return(nil, errors.New("test")) // cache not hit on the first call
+		eventStore.EXPECT().LookUp(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("test")) // cache not hit on the first call
 
 		handler := cache.New(eventStore, conflictResolver)
 		err := handler.Process(ctx, input, callNext)
@@ -117,8 +117,8 @@ func TestCache(t *testing.T) {
 		eventStore := mocks.NewMockEventStore(ctrl)
 
 		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).AnyTimes()
-		eventStore.EXPECT().LookUp(gomock.Any(), gomock.Any()).Return(nil, nil) // cache not hit on the first call
-		eventStore.EXPECT().Persist("key", "source", "content").Return(errors.New("test"))
+		eventStore.EXPECT().LookUp(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil) // cache not hit on the first call
+		eventStore.EXPECT().Persist(gomock.Any(), "key", "source", "content").Return(errors.New("test"))
 
 		handler := cache.New(eventStore, conflictResolver)
 		err := handler.Process(ctx, input, callNext)

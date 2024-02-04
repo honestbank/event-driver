@@ -26,13 +26,13 @@ func New(condition Condition, storage storage.EventStore) *joiner {
 
 func (e *joiner) Process(ctx context.Context, in event.Message, next handlers.CallNext) error {
 	// persist input message by key & source
-	err := e.storage.Persist(in.GetKey(), in.GetSource(), in.GetContent())
+	err := e.storage.Persist(ctx, in.GetKey(), in.GetSource(), in.GetContent())
 	if err != nil {
 		return err
 	}
 
 	// validate sources
-	messages, err := e.storage.LookUpByKey(in.GetKey())
+	messages, err := e.storage.LookUpByKey(ctx, in.GetKey())
 	if err != nil {
 		return err
 	}
