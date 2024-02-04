@@ -1,16 +1,14 @@
 package storage
 
 import (
+	"context"
+
 	"github.com/lukecold/event-driver/event"
 )
 
-// TODO: implement me
-// requirement:
-// 1. key & source should be compose key
-// 2. should use connection pool for scalability
-// 3. try to make the DB care-free for users
+// EventStore persists an event by key & source, and looks up an event by key+source, or a collection of events by key.
 type EventStore interface {
-	Persist(key, source, content string) error
-	LookUp(key, source string) (event.Message, error)
-	LookUpByKey(key string) ([]event.Message, error)
+	Persist(ctx context.Context, key, source, content string) error
+	LookUp(ctx context.Context, key, source string) (event.Message, error)
+	LookUpByKey(ctx context.Context, key string) ([]event.Message, error)
 }

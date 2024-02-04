@@ -30,7 +30,7 @@ func New(storage storage.EventStore, conflictResolver ConflictResolver) *cache {
 func (c *cache) Process(ctx context.Context, in event.Message, next handlers.CallNext) error {
 	key := in.GetKey()
 	source := in.GetSource()
-	message, err := c.storage.LookUp(key, source)
+	message, err := c.storage.LookUp(ctx, key, source)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (c *cache) Process(ctx context.Context, in event.Message, next handlers.Cal
 	}
 
 	// persist input message by key & source
-	err = c.storage.Persist(key, source, in.GetContent())
+	err = c.storage.Persist(ctx, key, source, in.GetContent())
 	if err != nil {
 		return err
 	}

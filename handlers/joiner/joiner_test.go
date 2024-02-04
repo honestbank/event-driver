@@ -86,7 +86,8 @@ func TestJoiner(t *testing.T) {
 			And(joiner.MatchAny("source2", "source3"))
 		eventStore := mocks.NewMockEventStore(ctrl)
 
-		eventStore.EXPECT().Persist(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("test")).Times(2)
+		eventStore.EXPECT().Persist(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(errors.New("test")).Times(2)
 
 		handler := joiner.New(condition, eventStore)
 		err := handler.Process(ctx, input1, callNext)
@@ -106,8 +107,8 @@ func TestJoiner(t *testing.T) {
 			And(joiner.MatchAny("source2", "source3"))
 		eventStore := mocks.NewMockEventStore(ctrl)
 
-		eventStore.EXPECT().Persist(gomock.Any(), gomock.Any(), gomock.Any()).Times(2)
-		eventStore.EXPECT().LookUpByKey(gomock.Any()).Return(nil, errors.New("test")).Times(2)
+		eventStore.EXPECT().Persist(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(2)
+		eventStore.EXPECT().LookUpByKey(gomock.Any(), gomock.Any()).Return(nil, errors.New("test")).Times(2)
 
 		handler := joiner.New(condition, eventStore)
 		err := handler.Process(ctx, input1, callNext)

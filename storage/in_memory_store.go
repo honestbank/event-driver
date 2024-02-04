@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"context"
+
 	"github.com/lukecold/event-driver/event"
 )
 
@@ -13,7 +15,7 @@ func NewInMemoryStore() *InMemoryStore {
 	return &inMemoryStore
 }
 
-func (i *InMemoryStore) Persist(key, source, content string) error {
+func (i *InMemoryStore) Persist(ctx context.Context, key, source, content string) error {
 	if _, isKeyExist := (*i)[key]; !isKeyExist {
 		(*i)[key] = make(map[string]string)
 	}
@@ -22,7 +24,7 @@ func (i *InMemoryStore) Persist(key, source, content string) error {
 	return nil
 }
 
-func (i *InMemoryStore) LookUp(key, source string) (event.Message, error) {
+func (i *InMemoryStore) LookUp(ctx context.Context, key, source string) (event.Message, error) {
 	content, isHit := (*i)[key][source]
 	if !isHit {
 		return nil, nil
@@ -31,7 +33,7 @@ func (i *InMemoryStore) LookUp(key, source string) (event.Message, error) {
 	return event.NewMessage(key, source, content), nil
 }
 
-func (i *InMemoryStore) LookUpByKey(key string) ([]event.Message, error) {
+func (i *InMemoryStore) LookUpByKey(ctx context.Context, key string) ([]event.Message, error) {
 	results := (*i)[key]
 	messages := make([]event.Message, 0, len(results))
 	for source, content := range results {
