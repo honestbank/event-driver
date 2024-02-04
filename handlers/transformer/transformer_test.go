@@ -2,6 +2,7 @@ package transformer_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,13 +33,16 @@ func TestTransformer(t *testing.T) {
 	}
 
 	for inputSource, expectedTransformedEvent := range inputSourceToTransformedEvent {
-		ctx := context.TODO()
-		ctrl := gomock.NewController(t)
-		next := mocks.NewMockCallNext(ctrl)
-		next.EXPECT().Call(ctx, expectedTransformedEvent)
+		testName := fmt.Sprintf("transform %s", inputSource)
+		t.Run(testName, func(t *testing.T) {
+			ctx := context.TODO()
+			ctrl := gomock.NewController(t)
+			next := mocks.NewMockCallNext(ctrl)
+			next.EXPECT().Call(ctx, expectedTransformedEvent)
 
-		message := event.NewMessage(key, inputSource, content)
-		err := eventMapper.Process(ctx, message, next)
-		assert.NoError(t, err)
+			message := event.NewMessage(key, inputSource, content)
+			err := eventMapper.Process(ctx, message, next)
+			assert.NoError(t, err)
+		})
 	}
 }

@@ -1,6 +1,7 @@
 package transformer_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -36,10 +37,13 @@ func TestRenameSourcesRule(t *testing.T) {
 	}
 
 	for inputSource, expectedTransformedSource := range inputSourceToTransformedSource {
-		transformed := renameSources.Transform(event.NewMessage(key, inputSource, content))
-		assert.Equal(t, key, transformed.GetKey())
-		assert.Equal(t, expectedTransformedSource, transformed.GetSource())
-		assert.Equal(t, content, transformed.GetContent())
+		testName := fmt.Sprintf("transform %s", inputSource)
+		t.Run(testName, func(t *testing.T) {
+			transformed := renameSources.Transform(event.NewMessage(key, inputSource, content))
+			assert.Equal(t, key, transformed.GetKey())
+			assert.Equal(t, expectedTransformedSource, transformed.GetSource())
+			assert.Equal(t, content, transformed.GetContent())
+		})
 	}
 }
 
@@ -53,9 +57,12 @@ func TestEraseContentFromSources(t *testing.T) {
 	}
 
 	for inputSource, expectedTransformedContent := range inputSourceToTransformedContent {
-		transformed := eraseContentFromSources.Transform(event.NewMessage(key, inputSource, content))
-		assert.Equal(t, key, transformed.GetKey())
-		assert.Equal(t, inputSource, transformed.GetSource())
-		assert.Equal(t, expectedTransformedContent, transformed.GetContent())
+		testName := fmt.Sprintf("transform %s", inputSource)
+		t.Run(testName, func(t *testing.T) {
+			transformed := eraseContentFromSources.Transform(event.NewMessage(key, inputSource, content))
+			assert.Equal(t, key, transformed.GetKey())
+			assert.Equal(t, inputSource, transformed.GetSource())
+			assert.Equal(t, expectedTransformedContent, transformed.GetContent())
+		})
 	}
 }

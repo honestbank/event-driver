@@ -7,7 +7,8 @@ import (
 	"github.com/lukecold/event-driver/handlers"
 )
 
-// transformer transforms the input with the given rules
+// transformer implements handlers.Handler that transforms the input with the given rules.
+// The input event.Message might be updated by the transformer.
 type transformer struct {
 	rule Rule
 }
