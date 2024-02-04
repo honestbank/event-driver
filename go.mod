@@ -1,6 +1,6 @@
 module github.com/lukecold/event-driver
 
-go 1.21
+go 1.18
 
 require (
 	github.com/cloudevents/sdk-go/v2 v2.15.0
