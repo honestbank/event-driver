@@ -8,14 +8,14 @@ import (
 
 // Rule defines a transformer rule that transforms the input event.Message.
 // The input event.Message might be updated by the rule.
-type Rule func(event.Message) event.Message
+type Rule func(*event.Message) *event.Message
 
-func (r Rule) Transform(in event.Message) event.Message {
+func (r Rule) Transform(in *event.Message) *event.Message {
 	return r(in)
 }
 
 func (r Rule) append(next Rule) Rule {
-	return func(message event.Message) event.Message {
+	return func(message *event.Message) *event.Message {
 		currentResult := r(message)
 
 		return next.Transform(currentResult)
@@ -24,7 +24,7 @@ func (r Rule) append(next Rule) Rule {
 
 // Identity returns the Rule that keeps the input as is.
 func Identity() Rule {
-	return func(in event.Message) event.Message {
+	return func(in *event.Message) event.Message {
 		return in
 	}
 }
@@ -44,7 +44,7 @@ func RenameSources(aliasMap map[string][]string) (Rule, error) {
 		}
 	}
 
-	return func(message event.Message) event.Message {
+	return func(message *event.Message) *event.Message {
 		source := message.GetSource()
 		if name, isAlias := reverseMap[source]; isAlias {
 			message.SetSource(name)
@@ -61,7 +61,7 @@ func EraseContentFromSources(sources ...string) Rule {
 		shouldErase[source] = true
 	}
 
-	return func(message event.Message) event.Message {
+	return func(message *event.Message) *event.Message {
 		if shouldErase[message.GetSource()] {
 			message.SetContent("")
 		}

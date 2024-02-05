@@ -24,7 +24,7 @@ func TestTransformer(t *testing.T) {
 	eventMapper := transformer.New(renameSources, eraseContentFromSource).
 		WithRules(eraseContentFromSource1And2)
 
-	inputSourceToTransformedEvent := map[string]event.Message{
+	inputSourceToTransformedEvent := map[string]*event.Message{
 		"alias1":  event.NewMessage(key, source, ""),
 		"alias2":  event.NewMessage(key, source, ""),
 		"source1": event.NewMessage(key, "source1", ""),
