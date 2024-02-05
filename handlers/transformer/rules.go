@@ -24,7 +24,7 @@ func (r Rule) append(next Rule) Rule {
 
 // Identity returns the Rule that keeps the input as is.
 func Identity() Rule {
-	return func(in *event.Message) event.Message {
+	return func(in *event.Message) *event.Message {
 		return in
 	}
 }
