@@ -15,12 +15,12 @@ func (g GoogleCloudEventStore) Persist(ctx context.Context, key, source, content
 	panic("implement me")
 }
 
-func (g GoogleCloudEventStore) LookUp(ctx context.Context, key, source string) (event.Message, error) {
+func (g GoogleCloudEventStore) LookUp(ctx context.Context, key, source string) (*event.Message, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (g GoogleCloudEventStore) LookUpByKey(ctx context.Context, key string) ([]event.Message, error) {
+func (g GoogleCloudEventStore) LookUpByKey(ctx context.Context, key string) ([]*event.Message, error) {
 	//TODO implement me
 	panic("implement me")
 }

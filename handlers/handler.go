@@ -7,9 +7,9 @@ import (
 )
 
 type CallNext interface {
-	Call(ctx context.Context, in event.Message) error
+	Call(ctx context.Context, in *event.Message) error
 }
 
 type Handler interface {
-	Process(ctx context.Context, in event.Message, next CallNext) error
+	Process(ctx context.Context, in *event.Message, next CallNext) error
 }

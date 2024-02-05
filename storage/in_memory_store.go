@@ -24,7 +24,7 @@ func (i *InMemoryStore) Persist(ctx context.Context, key, source, content string
 	return nil
 }
 
-func (i *InMemoryStore) LookUp(ctx context.Context, key, source string) (event.Message, error) {
+func (i *InMemoryStore) LookUp(ctx context.Context, key, source string) (*event.Message, error) {
 	content, isHit := (*i)[key][source]
 	if !isHit {
 		return nil, nil
@@ -33,9 +33,9 @@ func (i *InMemoryStore) LookUp(ctx context.Context, key, source string) (event.M
 	return event.NewMessage(key, source, content), nil
 }
 
-func (i *InMemoryStore) LookUpByKey(ctx context.Context, key string) ([]event.Message, error) {
+func (i *InMemoryStore) LookUpByKey(ctx context.Context, key string) ([]*event.Message, error) {
 	results := (*i)[key]
-	messages := make([]event.Message, 0, len(results))
+	messages := make([]*event.Message, 0, len(results))
 	for source, content := range results {
 		messages = append(messages, event.NewMessage(key, source, content))
 	}

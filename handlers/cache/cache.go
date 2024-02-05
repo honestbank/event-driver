@@ -11,7 +11,7 @@ import (
 // ConflictResolver implements handlers.Handler that resolves the case
 // when the input matches an existing record in the cache.
 type ConflictResolver interface {
-	Resolve(ctx context.Context, in event.Message, next handlers.CallNext) error
+	Resolve(ctx context.Context, in *event.Message, next handlers.CallNext) error
 }
 
 // cache persists the input in a storage, and let user decide what to do in case of a cache hit.
@@ -27,7 +27,7 @@ func New(storage storage.EventStore, conflictResolver ConflictResolver) *cache {
 	}
 }
 
-func (c *cache) Process(ctx context.Context, in event.Message, next handlers.CallNext) error {
+func (c *cache) Process(ctx context.Context, in *event.Message, next handlers.CallNext) error {
 	key := in.GetKey()
 	source := in.GetSource()
 	message, err := c.storage.LookUp(ctx, key, source)

@@ -32,7 +32,7 @@ func (m *transformer) WithRules(rules ...Rule) *transformer {
 	return m
 }
 
-func (m *transformer) Process(ctx context.Context, in event.Message, next handlers.CallNext) error {
+func (m *transformer) Process(ctx context.Context, in *event.Message, next handlers.CallNext) error {
 	transformed := m.rule.Transform(in)
 
 	return next.Call(ctx, transformed)

@@ -13,7 +13,7 @@ import (
 )
 
 func ToKNativeEventHandler(
-	convertInput func(cloudevents.Event) (event.Message, error),
+	convertInput func(cloudevents.Event) (*event.Message, error),
 	pipeline pipeline.Pipeline,
 	convertOutput func(error) (*cloudevents.Event, cloudevents.Result)) func(
 	ctx context.Context, event cloudevents.Event) (*cloudevents.Event, cloudevents.Result) {
