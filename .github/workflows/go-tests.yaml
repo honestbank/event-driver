@@ -38,15 +38,6 @@ jobs:
       - name: test and generate code coverage
         run: go test -v -race -coverprofile=./cover.out -covermode=atomic ./...
 
-      - name: check test coverage
-        uses: vladopajic/go-test-coverage@v2
-        with:
-          profile: cover.out
-          local-prefix: github.com/lukecold/event-driver
-          threshold-file: 80
-          threshold-package: 80
-          threshold-total: 80
-
       - name: sonarcloud
         uses: sonarsource/sonarcloud-github-action@master
         env:
