@@ -8,6 +8,9 @@ on:
       - reopened
       - synchronize
 
+permissions:
+  pull-requests: read
+
 jobs:
   tests:
     uses: ./.github/workflows/go-tests.yaml
