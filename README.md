@@ -1,9 +1,10 @@
 # Event Driver
 
-[![Coverage Status](https://coveralls.io/repos/github/lukecold/event-driver/badge.svg?branch=main)](https://coveralls.io/github/lukecold/event-driver?branch=main)
-[![Known Vulnerabilities](https://snyk.io/test/github/lukecold/event-driver/badge.svg)](https://snyk.io/test/github/lukecold/event-driver)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/lukecold/event-driver)
+[![Go Project Version](https://badge.fury.io/go/github.com%2Flukecold%2Fevent-driver.svg)](https://badge.fury.io/go/github.com%2Flukecold%2Fevent-driver)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=lukecold_event-driver&metric=alert_status)](https://sonarcloud.io/dashboard?id=lukecold_event-driver)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Sonar Coverage](https://img.shields.io/sonar/coverage/lukecold_event-driver?server=https%3A%2F%2Fsonarcloud.io)
+
 
 Event Driver is a lightweight and flexible event-driven programming framework for managing and handling events in your applications. It provides a simple and intuitive API to facilitate communication between different components or modules in your software.
 
