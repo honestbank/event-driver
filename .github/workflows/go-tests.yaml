@@ -46,3 +46,10 @@ jobs:
           threshold-file: 80
           threshold-package: 80
           threshold-total: 80
+
+      - name: sonarcloud
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        continue-on-error: true

@@ -11,7 +11,9 @@ permissions:
 jobs:
   tests:
     uses: ./.github/workflows/go-tests.yaml
+    secrets: inherit
 
   deploy:
     needs: [ tests ]
     uses: ./.github/workflows/release.yaml
+    secrets: inherit

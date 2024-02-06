@@ -11,3 +11,8 @@ on:
 jobs:
   tests:
     uses: ./.github/workflows/go-tests.yaml
+    secrets: inherit
+
+  semantic-pr:
+    uses: ./.github/workflows/semantic-pr.yaml
+    secrets: inherit
