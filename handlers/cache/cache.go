@@ -8,12 +8,6 @@ import (
 	"github.com/lukecold/event-driver/storage"
 )
 
-// ConflictResolver implements handlers.Handler that resolves the case
-// when the input matches an existing record in the cache.
-type ConflictResolver interface {
-	Resolve(ctx context.Context, in *event.Message, next handlers.CallNext) error
-}
-
 // cache persists the input in a storage, and let user decide what to do in case of a cache hit.
 type cache struct {
 	storage          storage.EventStore
