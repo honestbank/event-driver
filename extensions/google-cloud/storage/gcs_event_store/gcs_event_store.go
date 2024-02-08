@@ -36,6 +36,7 @@ func New(ctx context.Context, cfg *GCSConfig, options ...option.ClientOption) (s
 	}, nil
 }
 
+// Persist uploads the message as a file on the path `key/source`.
 func (g *GCSEventStore) Persist(ctx context.Context, key, source, content string) error {
 	bucket := g.client.Bucket(g.cfg.Bucket)
 
@@ -50,6 +51,7 @@ func (g *GCSEventStore) Persist(ctx context.Context, key, source, content string
 	return writer.Close()
 }
 
+// LookUp returns a single message by looking up the path `key/source`.
 func (g *GCSEventStore) LookUp(ctx context.Context, key, source string) (*event.Message, error) {
 	bucket := g.client.Bucket(g.cfg.Bucket)
 
@@ -63,6 +65,7 @@ func (g *GCSEventStore) LookUp(ctx context.Context, key, source string) (*event.
 	return event.NewMessage(key, source, string(content)), nil
 }
 
+// LookUpByKey returns a list of messages by looking up the prefix `key/`.
 func (g *GCSEventStore) LookUpByKey(ctx context.Context, key string) ([]*event.Message, error) {
 	bucket := g.client.Bucket(g.cfg.Bucket)
 

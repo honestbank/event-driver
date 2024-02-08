@@ -39,6 +39,8 @@ func (c *GCSConfig) WithTimeout(timeout Timeout) *GCSConfig {
 	return c
 }
 
+// NewContextWithTimeout generates a new context.Context with timeout from the parent context.
+// If neither operation-specific timeout nor default timeout is found, return parent context without any operation.
 func (c *GCSConfig) NewContextWithTimeout(
 	parent context.Context,
 	operation Operation) (context.Context, context.CancelFunc) {
@@ -49,5 +51,8 @@ func (c *GCSConfig) NewContextWithTimeout(
 		return context.WithTimeout(parent, *c.Timeout.Default)
 	}
 
-	return parent, func() {}
+	return parent, noop
+}
+
+func noop() {
 }
