@@ -12,8 +12,8 @@ import (
 	cloudEventTypes "github.com/cloudevents/sdk-go/v2/types"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/lukecold/event-driver/convert"
 	"github.com/lukecold/event-driver/event"
+	"github.com/lukecold/event-driver/extensions/knative/convert"
 	"github.com/lukecold/event-driver/pipeline"
 )
 

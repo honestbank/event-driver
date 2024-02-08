@@ -21,11 +21,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate mocks
-        run: make generate
+      - name: Test and generate code coverage on main module
+        run: make test
 
-      - name: Setup go modules
-        run: go clean -modcache; go mod tidy; go mod download; go mod verify
+      - name: Test and generate code coverage on extensions/google-cloud
+        run: |
+          cd extensions/google-cloud
+          make test
+      - run: tail -n +2 extensions/google-cloud/cover.out >> cover.out && rm extensions/google-cloud/cover.out
+
+      - name: Test and generate code coverage on extensions/knative
+        run: |
+          cd extensions/knative
+          make test
+      - run: tail -n +2 extensions/knative/cover.out >> cover.out && rm extensions/knative/cover.out
 
       - name: Go lint
         uses: golangci/golangci-lint-action@v3
@@ -34,9 +43,6 @@ jobs:
           args: --timeout=5m --modules-download-mode=readonly
           skip-pkg-cache: true
           skip-build-cache: true
-
-      - name: Test and generate code coverage
-        run: go test -v -race -coverprofile=./cover.out -covermode=atomic ./...
 
       - name: SonarCloud
         uses: sonarsource/sonarcloud-github-action@master
