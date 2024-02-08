@@ -6,6 +6,7 @@ require (
 	github.com/cloudevents/sdk-go/v2 v2.15.0
 	github.com/lukecold/event-driver v0.0.0-20240206165127-3047667e4829
 	github.com/stretchr/testify v1.8.4
+	go.uber.org/mock v0.4.0
 )
 
 require (
@@ -18,6 +19,8 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
+	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
+	golang.org/x/tools v0.17.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
