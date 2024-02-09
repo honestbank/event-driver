@@ -5,8 +5,16 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=lukecold_event-driver&metric=alert_status)](https://sonarcloud.io/dashboard?id=lukecold_event-driver)
 ![Sonar Coverage](https://img.shields.io/sonar/coverage/lukecold_event-driver?server=https%3A%2F%2Fsonarcloud.io)
 
-
 Event Driver is a lightweight and flexible event-driven programming framework for managing and handling events in your applications. It provides a simple and intuitive API to facilitate communication between different components or modules in your software.
+
+# Table of Contents
+1. [Features](#Features)
+2. [Tutorial](#Tutorial)
+   1. [Steps Break Down](#Steps-Break-Down)
+   2. [Example Code](#Example-Code)
+3. [Extensions](#Extensions)
+   1. [Google Cloud](#Google-Cloud)
+   2. [KNative](#KNative)
 
 ## Features
 
@@ -14,43 +22,135 @@ Event Driver is a lightweight and flexible event-driven programming framework fo
 - **Custom Handlers**: Define and dispatch custom handlers tailored to your application's needs.
 - **Pipeline Structure**: Simply put your handlers in order and expect it to work like a pipeline.
 - **Asynchronous Support**: Handle events asynchronously for improved performance and responsiveness.
-- **Lightweight and Easy to Use**: Minimalistic design for quick integration and usage.
+- **Lightweight and Easy to Use**: Minimal dependencies and quick integration & usage.
 
-## Usage
+## Tutorial
 
-The following showcases an example of building a message processing pipeline, and convert it into a KNative event handler.
+### Requirement
+
+Build an event-driven service that processes orders when `event1` is triggered,
+but the processing logic uses data from `event2` and `event3`.
+This service needs to
+1. be fault-tolerant (shouldn't crash at errors, and should be able to recover fast when crash does happen)
+2. be idempotent (not processing duplicate orders)
+
+### Steps Break Down
+1. Let's start with joining the events. Create a joiner that makes a join when all required events are present.
+   ```golang
+   myJoiner := joiner.New(joiner.MatchAll("event1", "event2", "event3"), myEventStore)
+   ```
+2. The event joiner that we just created requires an event store for lookups.
+   Here we pick GCS rather than the in-memory store to avoid losing data at restart.
+   ```golang
+   gcsTimeout := time.Second * 5 // tune the timeout that fits your content size
+   gcsConfig := gcs_event_store.Config("my-bucket").
+       WithTimeout(gcs_event_store.Timeout{Default: &gcsTimeout}) // can also specify finer timeout for each operation
+   // Create a GCS event store without authentication just for showcase.
+   myEventStore, err := gcs_event_store.New(ctx, gcsConfig, option.WithoutAuthentication())
+   ```
+3. Create a cache for idempotency.
+   The cache stores the events under the same GCS bucket as joiner (beware of source name conflict between them).
+
+   The cache achieves idempotency by skipping the process (i.e. not passing result to the next handler) on key conflict.
+   ```golang
+   idempotencyHandler := cache.New(myEventStore, cache.SkipOnConflict())
+   ```
+4. It would also be great if we can just ignore the content from `event1` to save
+   both GCS storage and the network bandwidth & memory of service pod.
+   ```golang
+   eraseContentOfEvent1 := transformer.EraseContentFromSources("event1")
+   eraseContentOfEvent1Handler := transformer.New(eraseContentOfEvent1)
+   ```
+5. Build a pipeline with the handlers
+   ```golang
+   myPipeline := pipeline.New().
+       WithNextHandler(eraseContentOfEvent1Handler). // remove the content of event1 before joining
+       WithNextHandler(myJoiner).                    // join all events of the same key into a single message
+       WithNextHandler(idempotencyHandler)           // check for idempotency after a joint message is formed
+   ```
+6. Start serving traffic!
+   ```golang
+   // Showcasing converting the pipeline into KNative cloud event handler
+   // One can also use sarama/confluentic kafka, Google Cloud function, etc.
+   handleKNativeEvent := convert.ToKNativeEventHandler(
+       convert.CloudEventToInput,
+       myPipeline,
+       convert.OutputToCloudResult)
+   cloudEventClient.StartReceiver(ctx, handleKNativeEvent) // assume cloudEventClient is already created
+   ```
+
+### Example Code
+Now assemble the step break-downs above to an example code
+
 ```golang
 package main
 
 import (
-	"context"
-	"log"
+   "context"
+   "log"
+   "time"
 
-	"github.com/lukecold/event-driver/convert"
-	"github.com/lukecold/event-driver/event"
-	"github.com/lukecold/event-driver/handlers/cache"
-	"github.com/lukecold/event-driver/handlers/joiner"
-	"github.com/lukecold/event-driver/handlers/transformer"
-	"github.com/lukecold/event-driver/pipeline"
-	"github.com/lukecold/event-driver/storage"
+   "github.com/lukecold/event-driver/event"
+   "github.com/lukecold/event-driver/extensions/google-cloud/storage/gcs_event_store"
+   "github.com/lukecold/event-driver/extensions/knative/convert"
+   "github.com/lukecold/event-driver/handlers/cache"
+   "github.com/lukecold/event-driver/handlers/joiner"
+   "github.com/lukecold/event-driver/handlers/transformer"
+   "github.com/lukecold/event-driver/pipeline"
+   "github.com/lukecold/event-driver/storage"
+   "google.golang.org/api/option"
 )
 
 func main() {
-	ctx := context.Background()
-	renameSources, err := transformer.RenameSources(map[string][]string{"source1": {"alias1", "alias2"}})
-	if err != nil {
-		log.Panic("failed to create 'RenameSources' transformer", err)
-	}
-	myPipeline := pipeline.New().
-		WithNextHandler(renameSources).
-		WithNextHandler(joiner.New(joiner.MatchAll("source1", "source2"), storage.NewInMemoryStore())).
-		WithNextHandler(cache.New(storage.NewInMemoryStore(), cache.SkipOnConflict()))
+    ctx := context.Background()
+    eraseContentOfEvent1 := transformer.EraseContentFromSources("event1")
+    eraseContentOfEvent1Handler := transformer.New(eraseContentOfEvent1)
+    myEventStore, err := createEventStore(ctx)
+    if err != nil {
+        log.Panic("failed to create GCS event store", err)
+    }
+    myJoiner := joiner.New(joiner.MatchAll("event1", "event2", "event3"), myEventStore)
+    idempotencyHandler := cache.New(myEventStore, cache.SkipOnConflict())
+    myPipeline := pipeline.New().
+        WithNextHandler(eraseContentOfEvent1Handler). // remove the content of event1 before joining
+        WithNextHandler(myJoiner).                    // join all events of the same key into a single message
+        WithNextHandler(idempotencyHandler)           // check for idempotency after a joint message is formed
+    // Showcasing converting the pipeline into KNative cloud event handler
+    // One can also use sarama/confluentic kafka, Google Cloud function, etc.
+    handleKNativeEvent := convert.ToKNativeEventHandler(
+        convert.CloudEventToInput,
+        myPipeline,
+        convert.OutputToCloudResult)
+    cloudEventClient.StartReceiver(ctx, handleKNativeEvent) // assume cloudEventClient is already created
+}
 
-	// if convert to cloud event handler
-	handleKNativeEvent := convert.ToKNativeEventHandler(
-		convert.CloudEventToInput,
-		myPipeline,
-		convert.OutputToCloudResult)
-	cloudEventClient.StartReceiver(ctx, handleKNativeEvent)
+func createEventStore(ctx context.Context) (storage.EventStore, error) {
+    gcsTimeout := time.Second * 5 // tune the timeout that fits your content size
+    gcsConfig := gcs_event_store.Config("my-bucket").
+        WithTimeout(gcs_event_store.Timeout{Default: &gcsTimeout}) // can also specify finer timeout for each operation
+
+    // Create a GCS event store without authentication just for showcase.
+    return gcs_event_store.New(ctx, gcsConfig, option.WithoutAuthentication())
 }
 ```
+
+## Extensions
+Event Driver also provides the following libs for integrating with other services/frameworks as extensions.
+
+### Google Cloud
+
+Link: [github.com/lukecold/event-driver/extensions/google-cloud](https://github.com/lukecold/event-driver/tree/main/extensions/google-cloud)
+
+Integrate event driver with Google Cloud, including using GCS/BigQuery as event store,
+integrating the event driver pipeline with Cloud Functions, etc.
+Check the [document](https://github.com/lukecold/event-driver/tree/main/extensions/google-cloud/README.md)
+to see what is currently supported and the latest update.
+
+### KNative
+
+Link: [github.com/lukecold/event-driver/extensions/knative](https://github.com/lukecold/event-driver/tree/main/extensions/knative)
+
+Integrate event driver with KNative,
+i.e. providing a converter that converts the event driver pipeline into KNative cloud event handler.
+Check the [document](https://github.com/lukecold/event-driver/tree/main/extensions/knative/README.md)
+to see what is currently supported and the latest update.
