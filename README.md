@@ -13,8 +13,8 @@ Event Driver is a lightweight and flexible event-driven programming framework fo
    1. [Steps Break Down](#Steps-Break-Down)
    2. [Example Code](#Example-Code)
 3. [Extensions](#Extensions)
-   1. [Google Cloud](#Google-Cloud)
-   2. [KNative](#KNative)
+   1. [Cloud Events](#Cloud-Events)
+   2. [Google Cloud](#Google-Cloud)
 
 ## Features
 
@@ -26,10 +26,10 @@ Event Driver is a lightweight and flexible event-driven programming framework fo
 
 ## Tutorial
 
-### Requirement
+This tutorial is in the format of a case study of a real-world service.
 
-Build an event-driven service that processes orders when `event1` is triggered,
-but the processing logic uses data from `event2` and `event3`.
+There's an event-driven service that processes orders when `event1` happens,
+but the processing logic only uses data from `event2` and `event3`.
 This service needs to
 1. be fault-tolerant (shouldn't crash at errors, and should be able to recover fast when crash does happen)
 2. be idempotent (not processing duplicate orders)
@@ -61,16 +61,51 @@ This service needs to
    eraseContentOfEvent1 := transformer.EraseContentFromSources("event1")
    eraseContentOfEvent1Handler := transformer.New(eraseContentOfEvent1)
    ```
-5. Build a pipeline with the handlers
+5. Now we need to build a customized handler to handle the business logic.
+   ```golang
+   package business_handler
+
+   import (
+       "github.com/lukecold/event-driver/handlers"
+   )
+
+   type MyInput struct {
+       event2 Event2Type `json:"event2"`
+       event3 Event3Type `json:"event3"`
+   }
+
+   type myHandler struct {
+       config Config
+   }
+
+   func New(config Config) handlers.Handler {
+       return &myHandler{
+           config: config,
+       }
+   }
+
+   func (c *myHandler) Process(ctx context.Context, in *event.Message, next handlers.CallNext) error {
+       var myInput MyInput
+       if err := json.UnMarshal(in.GetContent(), &myInput); err != nil {
+           return err
+       }
+       if err = handlesBusinessLogic(myInput, c.config); err != nil {
+           return err
+       }
+
+       return next.Call(ctx, in) // can omit if this is already the last handler
+   }
+   ```
+6. Build a pipeline with the handlers
    ```golang
    myPipeline := pipeline.New().
        WithNextHandler(eraseContentOfEvent1Handler). // remove the content of event1 before joining
        WithNextHandler(myJoiner).                    // join all events of the same key into a single message
        WithNextHandler(idempotencyHandler)           // check for idempotency after a joint message is formed
    ```
-6. Start serving traffic!
+7. Start serving traffic!
    ```golang
-   // Showcasing converting the pipeline into KNative cloud event handler
+   // Showcasing converting the pipeline into KNative cloud events handler
    // One can also use sarama/confluentic kafka, Google Cloud function, etc.
    handleKNativeEvent := convert.ToKNativeEventHandler(
        convert.CloudEventToInput,
@@ -91,8 +126,8 @@ import (
    "time"
 
    "github.com/lukecold/event-driver/event"
+   "github.com/lukecold/event-driver/extensions/cloudevents/convert"
    "github.com/lukecold/event-driver/extensions/google-cloud/storage/gcs_event_store"
-   "github.com/lukecold/event-driver/extensions/knative/convert"
    "github.com/lukecold/event-driver/handlers/cache"
    "github.com/lukecold/event-driver/handlers/joiner"
    "github.com/lukecold/event-driver/handlers/transformer"
@@ -111,11 +146,15 @@ func main() {
     }
     myJoiner := joiner.New(joiner.MatchAll("event1", "event2", "event3"), myEventStore)
     idempotencyHandler := cache.New(myEventStore, cache.SkipOnConflict())
+    businessHandler := business_handler.New()
+
     myPipeline := pipeline.New().
         WithNextHandler(eraseContentOfEvent1Handler). // remove the content of event1 before joining
         WithNextHandler(myJoiner).                    // join all events of the same key into a single message
-        WithNextHandler(idempotencyHandler)           // check for idempotency after a joint message is formed
-    // Showcasing converting the pipeline into KNative cloud event handler
+        WithNextHandler(idempotencyHandler).          // check for idempotency after a joint message is formed
+        WithNextHandler(businessHandler)              // handles the business logic
+
+    // Showcasing converting the pipeline into KNative cloud events handler
     // One can also use sarama/confluentic kafka, Google Cloud function, etc.
     handleKNativeEvent := convert.ToKNativeEventHandler(
         convert.CloudEventToInput,
@@ -137,6 +176,15 @@ func createEventStore(ctx context.Context) (storage.EventStore, error) {
 ## Extensions
 Event Driver also provides the following libs for integrating with other services/frameworks as extensions.
 
+### Cloud Events
+
+Link: [github.com/lukecold/event-driver/extensions/cloudevents](https://github.com/lukecold/event-driver/tree/main/extensions/cloudevents)
+
+Integrate event driver with [Cloud Events](github.com/cloudevents/sdk-go/v2),
+i.e. providing a converter that converts the event driver pipeline into a cloud events handler.
+Check the [document](https://github.com/lukecold/event-driver/tree/main/extensions/cloudevents/README.md)
+to see what is currently supported and the latest update.
+
 ### Google Cloud
 
 Link: [github.com/lukecold/event-driver/extensions/google-cloud](https://github.com/lukecold/event-driver/tree/main/extensions/google-cloud)
@@ -144,13 +192,4 @@ Link: [github.com/lukecold/event-driver/extensions/google-cloud](https://github.
 Integrate event driver with Google Cloud, including using GCS/BigQuery as event store,
 integrating the event driver pipeline with Cloud Functions, etc.
 Check the [document](https://github.com/lukecold/event-driver/tree/main/extensions/google-cloud/README.md)
-to see what is currently supported and the latest update.
-
-### KNative
-
-Link: [github.com/lukecold/event-driver/extensions/knative](https://github.com/lukecold/event-driver/tree/main/extensions/knative)
-
-Integrate event driver with KNative,
-i.e. providing a converter that converts the event driver pipeline into KNative cloud event handler.
-Check the [document](https://github.com/lukecold/event-driver/tree/main/extensions/knative/README.md)
 to see what is currently supported and the latest update.

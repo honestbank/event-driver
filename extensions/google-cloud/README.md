@@ -1,9 +1,10 @@
 # Event Driver - Google Cloud extension
 
 ## Construction Checklist
-- [x] Support GCS event store ()
+- [x] Support GCS event store
 - [ ] Support BigQuery event store
 - [ ] Integrate event-driver pipeline with Cloud Function
+- [ ] Create a feature-request or pull-request if you need something more
 
 ## Usage
 
@@ -17,8 +18,8 @@ import (
     "log"
 
     "github.com/lukecold/event-driver/event"
+    "github.com/lukecold/event-driver/extensions/cloudevents/convert"
     "github.com/lukecold/event-driver/extensions/google-cloud/storage/gcs_event_store"
-    "github.com/lukecold/event-driver/extensions/knative/convert"
     "github.com/lukecold/event-driver/handlers/cache"
     "github.com/lukecold/event-driver/handlers/joiner"
     "github.com/lukecold/event-driver/handlers/transformer"

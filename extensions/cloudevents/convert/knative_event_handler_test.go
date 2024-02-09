@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/lukecold/event-driver/event"
-	"github.com/lukecold/event-driver/extensions/knative/convert"
+	"github.com/lukecold/event-driver/extensions/cloudevents/convert"
 	"github.com/lukecold/event-driver/pipeline"
 )
 
