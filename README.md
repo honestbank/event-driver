@@ -5,6 +5,8 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=lukecold_event-driver&metric=alert_status)](https://sonarcloud.io/dashboard?id=lukecold_event-driver)
 ![Sonar Coverage](https://img.shields.io/sonar/coverage/lukecold_event-driver?server=https%3A%2F%2Fsonarcloud.io)
 
+Event Driver is a lightweight and flexible event-driven programming framework for managing and handling events in your applications. It provides a simple and intuitive API to facilitate communication between different components or modules in your software.
+
 # Table of Contents
 1. [Features](#Features)
 2. [Tutorial](#Tutorial)
@@ -13,8 +15,6 @@
 3. [Extensions](#Extensions)
    1. [Google Cloud](#Google-Cloud)
    2. [KNative](#KNative)
-
-Event Driver is a lightweight and flexible event-driven programming framework for managing and handling events in your applications. It provides a simple and intuitive API to facilitate communication between different components or modules in your software.
 
 ## Features
 
