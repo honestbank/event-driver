@@ -30,11 +30,11 @@ jobs:
           make test
       - run: tail -n +2 extensions/google-cloud/cover.out >> cover.out && rm extensions/google-cloud/cover.out
 
-      - name: Test and generate code coverage on extensions/knative
+      - name: Test and generate code coverage on extensions/cloudevents
         run: |
-          cd extensions/knative
+          cd extensions/cloudevents
           make test
-      - run: tail -n +2 extensions/knative/cover.out >> cover.out && rm extensions/knative/cover.out
+      - run: tail -n +2 extensions/cloudevents/cover.out >> cover.out && rm extensions/cloudevents/cover.out
 
       - name: Go lint
         uses: golangci/golangci-lint-action@v3

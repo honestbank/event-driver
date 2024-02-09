@@ -23,7 +23,7 @@ type OutputConverter func(context.Context, error) (*cloudEvents.Event, cloudEven
 // in order to provide compatibility for all use cases.
 type KNativeEventHandler func(context.Context, cloudEvents.Event) (*cloudEvents.Event, cloudEvents.Result)
 
-// ToKNativeEventHandler converts the pipeline to a KNative event handler,
+// ToKNativeEventHandler converts the pipeline to a KNativeEventHandler,
 // with an InputConverter to convert the KNativeEventHandler input to pipeline.Pipeline input,
 // and an OutputConverter to convert the pipeline.Pipeline output to KNativeEventHandler output.
 func ToKNativeEventHandler(

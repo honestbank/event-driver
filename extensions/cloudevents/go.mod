@@ -1,4 +1,4 @@
-module github.com/lukecold/event-driver/extensions/knative
+module github.com/lukecold/event-driver/extensions/cloudevents
 
 go 1.20
 
