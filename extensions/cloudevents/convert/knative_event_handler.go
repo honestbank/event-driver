@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	cloudEvents "github.com/cloudevents/sdk-go/v2"
+	"github.com/heetch/avro"
 
 	"github.com/lukecold/event-driver/event"
 	"github.com/lukecold/event-driver/pipeline"
@@ -49,6 +50,30 @@ func CloudEventToInput(_ context.Context, cloudEvent *cloudEvents.Event) (*event
 		return nil, err
 	}
 	source, err := GetTopic(cloudEvent)
+	if err != nil {
+		return nil, err
+	}
+
+	return event.NewMessage(*key, *source, string(cloudEvent.Data())), nil
+}
+
+// CloudEventAVROToInput is a built-in InputConverter designed to handle CloudEvents encoded in the AVRO schema format.
+// This function is responsible for converting a CloudEvent into a format suitable for ingestion into a pipeline as an input message.
+// It facilitates seamless integration of CloudEvents with the pipeline architecture by providing the necessary transformation.
+func CloudEventAVROToInput(_ context.Context, cloudEvent *cloudEvents.Event, schemaType *avro.Type) (*event.Message, error) {
+	key, err := GetKey(cloudEvent)
+	if err != nil {
+		return nil, err
+	}
+	source, err := GetTopic(cloudEvent)
+	if err != nil {
+		return nil, err
+	}
+	if len(cloudEvent.Data()) < 5 {
+		return nil, errors.New("invalid AVRO message length, required at least 5")
+	}
+
+	_, err = avro.Unmarshal(cloudEvent.Data()[5:], string(cloudEvent.Data()), schemaType)
 	if err != nil {
 		return nil, err
 	}
