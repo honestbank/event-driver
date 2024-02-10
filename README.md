@@ -1,5 +1,6 @@
 # Event Driver
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/lukecold/event-driver.svg)](https://pkg.go.dev/github.com/lukecold/event-driver)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/lukecold/event-driver)
 [![Go Project Version](https://badge.fury.io/go/github.com%2Flukecold%2Fevent-driver.svg)](https://badge.fury.io/go/github.com%2Flukecold%2Fevent-driver)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=lukecold_event-driver&metric=alert_status)](https://sonarcloud.io/dashboard?id=lukecold_event-driver)
@@ -101,7 +102,8 @@ This service needs to
    myPipeline := pipeline.New().
        WithNextHandler(eraseContentOfEvent1Handler). // remove the content of event1 before joining
        WithNextHandler(myJoiner).                    // join all events of the same key into a single message
-       WithNextHandler(idempotencyHandler)           // check for idempotency after a joint message is formed
+       WithNextHandler(idempotencyHandler).          // check for idempotency after a joint message is formed
+       WithNextHandler(businessHandler)              // handles the business logic
    ```
 7. Start serving traffic!
    ```golang
