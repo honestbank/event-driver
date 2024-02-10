@@ -4,12 +4,14 @@ go 1.20
 
 require (
 	github.com/cloudevents/sdk-go/v2 v2.15.0
+	github.com/heetch/avro v0.4.4
 	github.com/lukecold/event-driver v0.0.0-20240206165127-3047667e4829
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/mock v0.4.0
 )
 
 require (
+	github.com/actgardner/gogen-avro/v10 v10.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect

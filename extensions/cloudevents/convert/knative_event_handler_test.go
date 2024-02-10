@@ -10,6 +10,7 @@ import (
 	v2 "github.com/cloudevents/sdk-go/v2"
 	cloudEvents "github.com/cloudevents/sdk-go/v2/event"
 	cloudEventTypes "github.com/cloudevents/sdk-go/v2/types"
+	"github.com/heetch/avro"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/lukecold/event-driver/event"
@@ -84,6 +85,34 @@ func TestCloudEventToInput(t *testing.T) {
 	assert.NoError(t, err)
 	expectedInput := event.NewMessage(key, topic, string(content))
 	assert.Equal(t, expectedInput, input)
+}
+
+func TestCloudEventAVROToInput(t *testing.T) {
+	avroData := []byte(`{"id":"123","source":"example.com","specversion":"1.0","type":"eventType","datacontenttype":"application/json","data":"{\"key\":\"value\"}"}`)
+	stringOfTypeAVRO := "avro/binary"
+
+	cloudEvent := &v2.Event{
+		Context: &v2.EventContextV03{
+			Type:            "com.example.test",
+			Source:          cloudEventTypes.URIRef{URL: url.URL{Fragment: topic}},
+			ID:              "id123",
+			DataContentType: &stringOfTypeAVRO,
+		},
+		DataEncoded: avroData,
+	}
+
+	// Mock schemaType for AVRO unmarshaling
+	schemaType := &avro.Type{} // You would provide an actual schemaType here
+
+	// Call the function
+	message, err := convert.CloudEventAVROToInput(context.Background(), cloudEvent, schemaType)
+
+	// Check if the result is as expected
+	assert.NoError(t, err)
+	assert.NotNil(t, message)
+	assert.Equal(t, "id123", message.GetKey())
+	assert.Equal(t, "http://example.com/source", message.GetSource())
+	assert.Equal(t, "{\"key\":\"value\"}", message.GetContent()) // This assumes you are storing the payload as a string
 }
 
 // A plain happy case of convert.ToKNativeEventHandler.
