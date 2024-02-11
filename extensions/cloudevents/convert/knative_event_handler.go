@@ -35,7 +35,7 @@ func ToKNativeEventHandler(
 		if err != nil {
 			return nil, cloudEvents.NewHTTPResult(http.StatusBadRequest, "%s", err)
 		}
-		output := pipeline.Run(ctx, input)
+		output := pipeline.Process(ctx, input)
 
 		return convertOutput(ctx, output)
 	}

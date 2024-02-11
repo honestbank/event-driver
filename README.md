@@ -2,7 +2,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/lukecold/event-driver.svg)](https://pkg.go.dev/github.com/lukecold/event-driver)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/lukecold/event-driver)
-[![Go Project Version](https://badge.fury.io/go/github.com%2Flukecold%2Fevent-driver.svg)](https://badge.fury.io/go/github.com%2Flukecold%2Fevent-driver)
+![GitHub Release](https://img.shields.io/github/v/release/lukecold/event-driver)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=lukecold_event-driver&metric=alert_status)](https://sonarcloud.io/dashboard?id=lukecold_event-driver)
 ![Sonar Coverage](https://img.shields.io/sonar/coverage/lukecold_event-driver?server=https%3A%2F%2Fsonarcloud.io)
 
