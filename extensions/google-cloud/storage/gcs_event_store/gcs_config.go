@@ -15,6 +15,7 @@ const (
 
 type GCSConfig struct {
 	Bucket  string
+	Folder  *string
 	Timeout Timeout
 }
 
@@ -31,6 +32,12 @@ func Config(bucket string) *GCSConfig {
 			Operation: make(map[Operation]time.Duration),
 		},
 	}
+}
+
+func (c *GCSConfig) WithFolder(folder string) *GCSConfig {
+	c.Folder = &folder
+
+	return c
 }
 
 func (c *GCSConfig) WithTimeout(timeout Timeout) *GCSConfig {
