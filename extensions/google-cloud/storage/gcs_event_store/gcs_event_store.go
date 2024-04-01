@@ -36,12 +36,11 @@ func New(ctx context.Context, cfg *GCSConfig, options ...option.ClientOption) (s
 	}, nil
 }
 
-// Persist uploads the message as a file on the path `key/source`.
+// Persist uploads the message as a file on the path `folder/key/source`.
 func (g *GCSEventStore) Persist(ctx context.Context, key, source, content string) error {
 	bucket := g.client.Bucket(g.cfg.Bucket)
 
-	filename := fmt.Sprintf("%s/%s", key, source)
-
+	filename := composePath(g.cfg.Folder, key, source)
 	writeRequestCtx, _ := g.cfg.NewContextWithTimeout(ctx, WriteContent)
 	writer := bucket.Object(filename).NewWriter(writeRequestCtx)
 	if _, err := writer.Write([]byte(content)); err != nil {
@@ -51,11 +50,11 @@ func (g *GCSEventStore) Persist(ctx context.Context, key, source, content string
 	return writer.Close()
 }
 
-// LookUp returns a single message by looking up the path `key/source`.
+// LookUp returns a single message by looking up the path `folder/key/source`.
 func (g *GCSEventStore) LookUp(ctx context.Context, key, source string) (*event.Message, error) {
 	bucket := g.client.Bucket(g.cfg.Bucket)
 
-	filename := fmt.Sprintf("%s/%s", key, source)
+	filename := composePath(g.cfg.Folder, key, source)
 	readRequestCtx, _ := g.cfg.NewContextWithTimeout(ctx, ReadContent)
 	content, err := g.readFile(readRequestCtx, bucket, filename)
 	if err != nil {
@@ -65,13 +64,13 @@ func (g *GCSEventStore) LookUp(ctx context.Context, key, source string) (*event.
 	return event.NewMessage(key, source, string(content)), nil
 }
 
-// LookUpByKey returns a list of messages by looking up the prefix `key/`.
+// LookUpByKey returns a list of messages by looking up the prefix `folder/key/`.
 func (g *GCSEventStore) LookUpByKey(ctx context.Context, key string) ([]*event.Message, error) {
 	bucket := g.client.Bucket(g.cfg.Bucket)
 
 	messages := make([]*event.Message, 0)
 	listRequestCtx, _ := g.cfg.NewContextWithTimeout(ctx, ListContents)
-	objectIterator := bucket.Objects(listRequestCtx, &gcs.Query{Prefix: key + "/"})
+	objectIterator := bucket.Objects(listRequestCtx, &gcs.Query{Prefix: composePath(g.cfg.Folder, key) + "/"})
 	for {
 		object, err := objectIterator.Next()
 		if errors.Is(err, iterator.Done) {
@@ -108,11 +107,24 @@ func (g *GCSEventStore) readFile(ctx context.Context, bucket *gcs.BucketHandle, 
 	return io.ReadAll(reader)
 }
 
-func parseFileName(filename string) (key, source string, err error) {
-	split := strings.Split(filename, "/")
-	if len(split) != 2 {
-		return "", "", fmt.Errorf("filename %s isn't of format 'key/source'", filename)
+func composePath(folder *string, keys ...string) string {
+	components := make([]string, 0)
+
+	if folder != nil {
+		components = append(components, strings.Trim(*folder, "/"))
+	}
+	for _, key := range keys {
+		components = append(components, strings.Trim(key, "/"))
 	}
 
-	return split[0], split[1], nil
+	return strings.Join(components, "/")
+}
+
+func parseFileName(filename string) (key, source string, err error) {
+	split := strings.Split(filename, "/")
+	if len(split) < 2 {
+		return "", "", fmt.Errorf("filename %s isn't of format 'folder/key/source'", filename)
+	}
+
+	return split[len(split)-2], split[len(split)-1], nil
 }
