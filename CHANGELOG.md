@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.0](https://github.com/lukecold/event-driver/compare/v0.1.0...v0.2.0) (2024-04-03)
+
+
+### Features
+
+* GCS event store support grouping storage with folders ([8d53f1b](https://github.com/lukecold/event-driver/commit/8d53f1b29b01df3640ecafa942c6df203d7d4ac1))
+* GCS event store support grouping storage with folders ([#35](https://github.com/lukecold/event-driver/issues/35)) ([73f0c1d](https://github.com/lukecold/event-driver/commit/73f0c1df0978aa07509c75dc236e77fe9d63ee29))
+* Support customizing key extractor in cache ([#36](https://github.com/lukecold/event-driver/issues/36)) ([cac6ea4](https://github.com/lukecold/event-driver/commit/cac6ea4d8f95bf6c9b60a73210d2a358684c42d6))
+* Sync the github.com/lukecold/event-driver version to extensions ([#33](https://github.com/lukecold/event-driver/issues/33)) ([88ed501](https://github.com/lukecold/event-driver/commit/88ed50113460b35babf33006eb178363e37c8335))
+
 ## [0.1.0](https://github.com/lukecold/event-driver/compare/0.0.3...v0.1.0) (2024-02-10)
 
 
