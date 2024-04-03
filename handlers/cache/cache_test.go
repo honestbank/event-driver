@@ -22,13 +22,16 @@ func TestCache(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		conflictResolver := mocks.NewMockConflictResolver(ctrl)
+		keyExtractor := cache.ExtractMessageKey()
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := storage.NewInMemoryStore()
 
 		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).AnyTimes()
 		conflictResolver.EXPECT().Resolve(ctx, input1, callNext).Times(1) // trigger conflictResolver when cache hit
 
-		handler := cache.New(eventStore, conflictResolver)
+		handler := cache.New(eventStore).
+			WithConflictResolver(conflictResolver).
+			WithKeyExtractor(keyExtractor)
 		err := handler.Process(ctx, input1, callNext)
 		assert.NoError(t, err)
 		err = handler.Process(ctx, input2, callNext)
@@ -42,12 +45,15 @@ func TestCache(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		conflictResolver := mocks.NewMockConflictResolver(ctrl)
+		keyExtractor := cache.ExtractMessageKey()
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := storage.NewInMemoryStore()
 
 		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).AnyTimes()
 
-		handler := cache.New(eventStore, conflictResolver)
+		handler := cache.New(eventStore).
+			WithConflictResolver(conflictResolver).
+			WithKeyExtractor(keyExtractor)
 		err := handler.Process(ctx, input1, callNext)
 		assert.NoError(t, err)
 		err = handler.Process(ctx, input2, callNext)
@@ -61,13 +67,16 @@ func TestCache(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		conflictResolver := mocks.NewMockConflictResolver(ctrl)
+		keyExtractor := cache.ExtractMessageKey()
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := storage.NewInMemoryStore()
 
 		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).AnyTimes()
 		conflictResolver.EXPECT().Resolve(ctx, input1, callNext).Return(errors.New("test"))
 
-		handler := cache.New(eventStore, conflictResolver)
+		handler := cache.New(eventStore).
+			WithConflictResolver(conflictResolver).
+			WithKeyExtractor(keyExtractor)
 		err := handler.Process(ctx, input1, callNext)
 		assert.NoError(t, err)
 		err = handler.Process(ctx, input2, callNext)
@@ -80,12 +89,15 @@ func TestCache(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		conflictResolver := mocks.NewMockConflictResolver(ctrl)
+		keyExtractor := cache.ExtractMessageKey()
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := storage.NewInMemoryStore()
 
 		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).Return(errors.New("test"))
 
-		handler := cache.New(eventStore, conflictResolver)
+		handler := cache.New(eventStore).
+			WithConflictResolver(conflictResolver).
+			WithKeyExtractor(keyExtractor)
 		err := handler.Process(ctx, input, callNext)
 		assert.Error(t, err)
 	})
@@ -96,13 +108,16 @@ func TestCache(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		conflictResolver := mocks.NewMockConflictResolver(ctrl)
+		keyExtractor := cache.ExtractMessageKey()
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := mocks.NewMockEventStore(ctrl)
 
 		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).AnyTimes()
 		eventStore.EXPECT().LookUp(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("test")) // cache not hit on the first call
 
-		handler := cache.New(eventStore, conflictResolver)
+		handler := cache.New(eventStore).
+			WithConflictResolver(conflictResolver).
+			WithKeyExtractor(keyExtractor)
 		err := handler.Process(ctx, input, callNext)
 		assert.Error(t, err)
 	})
@@ -113,6 +128,7 @@ func TestCache(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		conflictResolver := mocks.NewMockConflictResolver(ctrl)
+		keyExtractor := cache.ExtractMessageKey()
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := mocks.NewMockEventStore(ctrl)
 
@@ -120,7 +136,9 @@ func TestCache(t *testing.T) {
 		eventStore.EXPECT().LookUp(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil) // cache not hit on the first call
 		eventStore.EXPECT().Persist(gomock.Any(), "key", "source", "content").Return(errors.New("test"))
 
-		handler := cache.New(eventStore, conflictResolver)
+		handler := cache.New(eventStore).
+			WithConflictResolver(conflictResolver).
+			WithKeyExtractor(keyExtractor)
 		err := handler.Process(ctx, input, callNext)
 		assert.Error(t, err)
 	})
