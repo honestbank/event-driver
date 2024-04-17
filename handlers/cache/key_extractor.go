@@ -8,13 +8,13 @@ type KeyExtractor interface {
 	Extract(*event.Message) (string, error)
 }
 
-type extractMessageKey struct{}
+type getMessageKey struct{}
 
-func (k *extractMessageKey) Extract(in *event.Message) (string, error) {
+func (k *getMessageKey) Extract(in *event.Message) (string, error) {
 	return in.GetKey(), nil
 }
 
-// ExtractMessageKey returns a KeyExtractor that simply gets the member value "key" from the message.
-func ExtractMessageKey() KeyExtractor {
-	return &extractMessageKey{}
+// GetMessageKey returns a CacheKeyExtractor that simply gets the member value "key" from the message.
+func GetMessageKey() KeyExtractor {
+	return &getMessageKey{}
 }
