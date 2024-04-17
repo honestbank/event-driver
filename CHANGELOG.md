@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/lukecold/event-driver/compare/v0.2.0...v0.3.0) (2024-04-17)
+
+
+### Features
+
+* Add logging in the handlers ([a9beb8a](https://github.com/lukecold/event-driver/commit/a9beb8aa8db2f068f9f0d6f1b4f1d41451b8f6ee))
+* Add logging in the handlers ([#37](https://github.com/lukecold/event-driver/issues/37)) ([8c0ebc4](https://github.com/lukecold/event-driver/commit/8c0ebc4441df2dbed1af20e381583622ab9234c5))
+
 ## [0.2.0](https://github.com/lukecold/event-driver/compare/v0.1.0...v0.2.0) (2024-04-03)
 
 
