@@ -26,12 +26,13 @@ func TestCache(t *testing.T) {
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := storage.NewInMemoryStore()
 
-		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).AnyTimes()
+		callNext.EXPECT().Call(gomock.Any(), gomock.Any())
 		conflictResolver.EXPECT().Resolve(ctx, input1, callNext).Times(1) // trigger conflictResolver when cache hit
 
 		handler := cache.New(eventStore).
 			WithConflictResolver(conflictResolver).
-			WithKeyExtractor(keyExtractor)
+			WithKeyExtractor(keyExtractor).
+			Verbose()
 		err := handler.Process(ctx, input1, callNext)
 		assert.NoError(t, err)
 		err = handler.Process(ctx, input2, callNext)
@@ -49,7 +50,7 @@ func TestCache(t *testing.T) {
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := storage.NewInMemoryStore()
 
-		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).AnyTimes()
+		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).Times(2)
 
 		handler := cache.New(eventStore).
 			WithConflictResolver(conflictResolver).

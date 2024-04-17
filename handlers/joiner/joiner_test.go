@@ -29,7 +29,7 @@ func TestJoiner(t *testing.T) {
 		expectedMessage := event.NewMessage("key", "composed-event", `{"source1":"content1","source2":"content2"}`)
 		callNext.EXPECT().Call(gomock.Any(), expectedMessage).AnyTimes()
 
-		handler := joiner.New(condition, eventStore)
+		handler := joiner.New(condition, eventStore).Verbose()
 		err := handler.Process(ctx, input1, callNext)
 		assert.NoError(t, err)
 		err = handler.Process(ctx, input2, callNext)

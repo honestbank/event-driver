@@ -22,7 +22,8 @@ func TestTransformer(t *testing.T) {
 	eraseContentFromSource := transformer.EraseContentFromSources(source)
 	eraseContentFromSource1And2 := transformer.EraseContentFromSources("source1", "source2")
 	eventMapper := transformer.New(renameSources, eraseContentFromSource).
-		WithRules(eraseContentFromSource1And2)
+		WithRules(eraseContentFromSource1And2).
+		Verbose()
 
 	inputSourceToTransformedEvent := map[string]*event.Message{
 		"alias1":  event.NewMessage(key, source, ""),
