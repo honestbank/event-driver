@@ -60,6 +60,9 @@ func (g *GCSEventStore) LookUp(ctx context.Context, key, source string) (*event.
 	if err != nil {
 		return nil, err
 	}
+	if content == nil {
+		return nil, nil
+	}
 
 	return event.NewMessage(key, source, string(content)), nil
 }
