@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/lukecold/event-driver/compare/v0.3.0...v0.3.1) (2024-04-17)
+
+
+### Bug Fixes
+
+* **extensions/google-cloud:** GCSEventStore should return null message when object is not found ([bf35fad](https://github.com/lukecold/event-driver/commit/bf35fad9effc8e505ee6e3df3bef41086534d31a))
+* **extensions/google-cloud:** GCSEventStore should return null message when object is not found ([#39](https://github.com/lukecold/event-driver/issues/39)) ([9493321](https://github.com/lukecold/event-driver/commit/9493321eca2194de75de8bc2685694aaaf2516f2))
+
 ## [0.3.0](https://github.com/lukecold/event-driver/compare/v0.2.0...v0.3.0) (2024-04-17)
 
 
