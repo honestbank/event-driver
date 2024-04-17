@@ -39,7 +39,7 @@ func TestKeyExtractor(t *testing.T) {
 		input1 := event.NewMessage("key", "source", "content1")
 		input2 := event.NewMessage("key", "source", "content2")
 
-		keyExtractor := cache.ExtractMessageKey()
+		keyExtractor := cache.GetMessageKey()
 		ctrl := gomock.NewController(t)
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := storage.NewInMemoryStore()

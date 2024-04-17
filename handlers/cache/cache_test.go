@@ -22,16 +22,17 @@ func TestCache(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		conflictResolver := mocks.NewMockConflictResolver(ctrl)
-		keyExtractor := cache.ExtractMessageKey()
+		keyExtractor := cache.GetMessageKey()
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := storage.NewInMemoryStore()
 
-		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).AnyTimes()
+		callNext.EXPECT().Call(gomock.Any(), gomock.Any())
 		conflictResolver.EXPECT().Resolve(ctx, input1, callNext).Times(1) // trigger conflictResolver when cache hit
 
 		handler := cache.New(eventStore).
 			WithConflictResolver(conflictResolver).
-			WithKeyExtractor(keyExtractor)
+			WithKeyExtractor(keyExtractor).
+			Verbose()
 		err := handler.Process(ctx, input1, callNext)
 		assert.NoError(t, err)
 		err = handler.Process(ctx, input2, callNext)
@@ -45,11 +46,11 @@ func TestCache(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		conflictResolver := mocks.NewMockConflictResolver(ctrl)
-		keyExtractor := cache.ExtractMessageKey()
+		keyExtractor := cache.GetMessageKey()
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := storage.NewInMemoryStore()
 
-		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).AnyTimes()
+		callNext.EXPECT().Call(gomock.Any(), gomock.Any()).Times(2)
 
 		handler := cache.New(eventStore).
 			WithConflictResolver(conflictResolver).
@@ -67,7 +68,7 @@ func TestCache(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		conflictResolver := mocks.NewMockConflictResolver(ctrl)
-		keyExtractor := cache.ExtractMessageKey()
+		keyExtractor := cache.GetMessageKey()
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := storage.NewInMemoryStore()
 
@@ -89,7 +90,7 @@ func TestCache(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		conflictResolver := mocks.NewMockConflictResolver(ctrl)
-		keyExtractor := cache.ExtractMessageKey()
+		keyExtractor := cache.GetMessageKey()
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := storage.NewInMemoryStore()
 
@@ -108,7 +109,7 @@ func TestCache(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		conflictResolver := mocks.NewMockConflictResolver(ctrl)
-		keyExtractor := cache.ExtractMessageKey()
+		keyExtractor := cache.GetMessageKey()
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := mocks.NewMockEventStore(ctrl)
 
@@ -128,7 +129,7 @@ func TestCache(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		conflictResolver := mocks.NewMockConflictResolver(ctrl)
-		keyExtractor := cache.ExtractMessageKey()
+		keyExtractor := cache.GetMessageKey()
 		callNext := mocks.NewMockCallNext(ctrl)
 		eventStore := mocks.NewMockEventStore(ctrl)
 
