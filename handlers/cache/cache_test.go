@@ -3,8 +3,11 @@ package cache_test
 import (
 	"context"
 	"errors"
+	"log/slog"
+	"strings"
 	"testing"
 
+	"github.com/lukecold/event-driver/handlers/options"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
@@ -29,14 +32,16 @@ func TestCache(t *testing.T) {
 		callNext.EXPECT().Call(gomock.Any(), gomock.Any())
 		conflictResolver.EXPECT().Resolve(ctx, input1, callNext).Times(1) // trigger conflictResolver when cache hit
 
-		handler := cache.New(eventStore).
+		logs := &strings.Builder{}
+		handler := cache.New(eventStore, options.WithLogLevel(slog.LevelDebug), options.WithLogWriter(logs)).
 			WithConflictResolver(conflictResolver).
-			WithKeyExtractor(keyExtractor).
-			Verbose()
+			WithKeyExtractor(keyExtractor)
 		err := handler.Process(ctx, input1, callNext)
 		assert.NoError(t, err)
+		assert.Contains(t, logs.String(), "cache not hit")
 		err = handler.Process(ctx, input2, callNext)
 		assert.NoError(t, err)
+		assert.Contains(t, logs.String(), "cache hit")
 	})
 
 	t.Run("cache not hit", func(t *testing.T) {
@@ -59,6 +64,28 @@ func TestCache(t *testing.T) {
 		assert.NoError(t, err)
 		err = handler.Process(ctx, input2, callNext)
 		assert.NoError(t, err)
+	})
+
+	t.Run("failed to extract key", func(t *testing.T) {
+		ctx := context.TODO()
+		input := event.NewMessage("key", "source", "content")
+
+		ctrl := gomock.NewController(t)
+		conflictResolver := mocks.NewMockConflictResolver(ctrl)
+		keyExtractor := mocks.NewMockKeyExtractor(ctrl)
+		callNext := mocks.NewMockCallNext(ctrl)
+		eventStore := storage.NewInMemoryStore()
+
+		keyExtractor.EXPECT().Extract(gomock.Any()).Return("", errors.New("test error"))
+
+		logs := &strings.Builder{}
+		handler := cache.New(eventStore, options.WithLogWriter(logs)).
+			WithConflictResolver(conflictResolver).
+			WithKeyExtractor(keyExtractor)
+		err := handler.Process(ctx, input, callNext)
+		assert.Error(t, err)
+		assert.Contains(t, logs.String(), "failed to extract cache key")
+		assert.Contains(t, logs.String(), `"error":"test error"`)
 	})
 
 	t.Run("failed to resolve", func(t *testing.T) {

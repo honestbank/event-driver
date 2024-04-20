@@ -47,7 +47,8 @@ func TestKeyExtractor(t *testing.T) {
 		// callNext got triggered on input1, but skipped on input2
 		callNext.EXPECT().Call(ctx, input1)
 
-		handler := cache.New(eventStore).WithKeyExtractor(keyExtractor)
+		handler := cache.New(eventStore).
+			WithKeyExtractor(keyExtractor)
 
 		err := handler.Process(ctx, input1, callNext)
 		assert.NoError(t, err)
@@ -73,7 +74,8 @@ func TestKeyExtractor(t *testing.T) {
 		// callNext got triggered on input1, but skipped on input2
 		callNext.EXPECT().Call(ctx, input1)
 
-		handler := cache.New(eventStore).WithKeyExtractor(keyExtractor)
+		handler := cache.New(eventStore).
+			WithKeyExtractor(keyExtractor)
 
 		err := handler.Process(ctx, input1, callNext)
 		assert.NoError(t, err)
