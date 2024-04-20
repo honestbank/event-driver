@@ -3,10 +3,11 @@ package joiner
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 
 	"github.com/lukecold/event-driver/event"
 	"github.com/lukecold/event-driver/handlers"
-	"github.com/lukecold/event-driver/log"
+	"github.com/lukecold/event-driver/handlers/options"
 	"github.com/lukecold/event-driver/storage"
 )
 
@@ -16,36 +17,37 @@ import (
 type joiner struct {
 	condition Condition
 	storage   storage.EventStore
-	logger    *log.Logger
+	logger    *slog.Logger
 }
 
-func New(condition Condition, storage storage.EventStore) *joiner {
+func New(condition Condition, storage storage.EventStore, opts ...options.Option) *joiner {
+	cfg := options.DefaultOptions()
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
 	return &joiner{
 		condition: condition,
 		storage:   storage,
-		logger:    log.New("joiner"),
+		logger: slog.New(slog.NewJSONHandler(cfg.GetLogWriter(), &slog.HandlerOptions{Level: cfg.GetLogLevel()})).
+			With(slog.String("handler", "joiner")),
 	}
 }
 
-func (e *joiner) Verbose() *joiner {
-	e.logger.Verbose()
-
-	return e
-}
-
-func (e *joiner) Process(ctx context.Context, in *event.Message, next handlers.CallNext) error {
+func (j *joiner) Process(ctx context.Context, in *event.Message, next handlers.CallNext) error {
+	logger := j.logger.With(slog.String("key", in.GetKey()), slog.String("source", in.GetSource()))
 	// persist input message by key & source
-	err := e.storage.Persist(ctx, in.GetKey(), in.GetSource(), in.GetContent())
+	err := j.storage.Persist(ctx, in.GetKey(), in.GetSource(), in.GetContent())
 	if err != nil {
-		e.logger.Error("failed to persist message with key=%s, source=%s", in.GetKey(), in.GetSource())
+		logger.Error("failed to persist message", slog.Any("error", err))
 
 		return err
 	}
 
 	// validate sources
-	messages, err := e.storage.LookUpByKey(ctx, in.GetKey())
+	messages, err := j.storage.LookUpByKey(ctx, in.GetKey())
 	if err != nil {
-		e.logger.Error("failed to look up message with key=%s", in.GetKey())
+		logger.Error("failed to look up by key", slog.Any("error", err))
 
 		return err
 	}
@@ -53,8 +55,8 @@ func (e *joiner) Process(ctx context.Context, in *event.Message, next handlers.C
 	for _, message := range messages {
 		persistedSources = append(persistedSources, message.GetSource())
 	}
-	if !e.condition.Evaluate(persistedSources) {
-		e.logger.Debug("got message with key=%s, source=%s, but condition isn't met yet", in.GetKey(), in.GetSource())
+	if !j.condition.Evaluate(persistedSources) {
+		logger.Debug("got message, but condition isn't met yet")
 
 		return nil
 	}
@@ -66,14 +68,14 @@ func (e *joiner) Process(ctx context.Context, in *event.Message, next handlers.C
 	}
 	jointContent, err := json.Marshal(contentBySource)
 	if err != nil {
-		e.logger.Error("failed to serialize joint message for key=%s", in.GetKey())
+		logger.Error("failed to serialize joint message", slog.Any("error", err))
 
 		return err
 	}
 
 	jointEvent := event.NewMessage(in.GetKey(), "composed-event", string(jointContent))
-	e.logger.Info("joined message for key=%s", in.GetKey())
-	e.logger.Debug("joint event: %v", *jointEvent)
+	logger.Info("joined message")
+	logger.Debug("joint event", slog.String("content", string(jointContent)))
 
 	return next.Call(ctx, jointEvent)
 }

@@ -26,7 +26,8 @@ func TestSkipOnConflict(t *testing.T) {
 	// callNext got triggered on input1, but skipped on input2
 	callNext.EXPECT().Call(ctx, input1)
 
-	handler := cache.New(eventStore).WithConflictResolver(skipOnConflict)
+	handler := cache.New(eventStore).
+		WithConflictResolver(skipOnConflict)
 	err := handler.Process(ctx, input1, callNext)
 	assert.NoError(t, err)
 	err = handler.Process(ctx, input2, callNext)

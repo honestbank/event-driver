@@ -2,10 +2,11 @@ package cache
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/lukecold/event-driver/event"
 	"github.com/lukecold/event-driver/handlers"
-	"github.com/lukecold/event-driver/log"
+	"github.com/lukecold/event-driver/handlers/options"
 	"github.com/lukecold/event-driver/storage"
 )
 
@@ -13,16 +14,22 @@ import (
 type cache struct {
 	cacheKeyExtractor KeyExtractor
 	conflictResolver  ConflictResolver
-	logger            *log.Logger
+	logger            *slog.Logger
 	storage           storage.EventStore
 }
 
-func New(storage storage.EventStore) *cache {
+func New(storage storage.EventStore, opts ...options.Option) *cache {
+	cfg := options.DefaultOptions()
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
 	return &cache{
 		cacheKeyExtractor: GetMessageKey(),
 		conflictResolver:  SkipOnConflict(),
-		logger:            log.New("cache"),
-		storage:           storage,
+		logger: slog.New(slog.NewJSONHandler(cfg.GetLogWriter(), &slog.HandlerOptions{Level: cfg.GetLogLevel()})).
+			With(slog.String("handler", "cache")),
+		storage: storage,
 	}
 }
 
@@ -38,29 +45,25 @@ func (c *cache) WithConflictResolver(conflictResolver ConflictResolver) *cache {
 	return c
 }
 
-func (c *cache) Verbose() *cache {
-	c.logger.Verbose()
-
-	return c
-}
-
 func (c *cache) Process(ctx context.Context, in *event.Message, next handlers.CallNext) error {
+	logger := c.logger.With(slog.String("key", in.GetKey()), slog.String("source", in.GetSource()))
 	key, err := c.cacheKeyExtractor.Extract(in)
 	if err != nil {
-		c.logger.Error("failed to extract cache key for message_key=%s", in.GetKey())
+		logger.Error("failed to extract cache key", slog.Any("error", err))
 
 		return err
 	}
+	logger = logger.With(slog.String("cache_key", key))
 	source := in.GetSource()
 	message, err := c.storage.LookUp(ctx, key, source)
 	if err != nil {
-		c.logger.Error("failed to look up message with cache_key=%s", key)
+		logger.Error("failed to look up message", slog.Any("error", err))
 
 		return err
 	}
 	// cache hit
 	if message != nil {
-		c.logger.Info("cache hit on cache_key=%s", key)
+		logger.Info("cache hit")
 
 		return c.conflictResolver.Resolve(ctx, message, next)
 	}
@@ -68,11 +71,11 @@ func (c *cache) Process(ctx context.Context, in *event.Message, next handlers.Ca
 	// persist input message by key & source
 	err = c.storage.Persist(ctx, key, source, in.GetContent())
 	if err != nil {
-		c.logger.Error("failed to persist message with cache_key=%s, source=%s", key, in.GetSource())
+		logger.Error("failed to persist message", slog.Any("error", err))
 
 		return err
 	}
-	c.logger.Debug("cache not hit on cache_key=%s", key)
+	logger.Debug("cache not hit")
 
 	return next.Call(ctx, in)
 }

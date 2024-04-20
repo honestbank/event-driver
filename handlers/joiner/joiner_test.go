@@ -3,8 +3,11 @@ package joiner_test
 import (
 	"context"
 	"errors"
+	"log/slog"
+	"strings"
 	"testing"
 
+	"github.com/lukecold/event-driver/handlers/options"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
@@ -29,11 +32,14 @@ func TestJoiner(t *testing.T) {
 		expectedMessage := event.NewMessage("key", "composed-event", `{"source1":"content1","source2":"content2"}`)
 		callNext.EXPECT().Call(gomock.Any(), expectedMessage).AnyTimes()
 
-		handler := joiner.New(condition, eventStore).Verbose()
+		logs := &strings.Builder{}
+		handler := joiner.New(condition, eventStore, options.WithLogLevel(slog.LevelDebug), options.WithLogWriter(logs))
 		err := handler.Process(ctx, input1, callNext)
 		assert.NoError(t, err)
+		assert.Contains(t, logs.String(), "got message, but condition isn't met yet")
 		err = handler.Process(ctx, input2, callNext)
 		assert.NoError(t, err)
+		assert.Contains(t, logs.String(), "joined message")
 	})
 
 	t.Run("condition not met", func(t *testing.T) {
