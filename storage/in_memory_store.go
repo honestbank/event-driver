@@ -15,16 +15,17 @@ func NewInMemoryStore() *InMemoryStore {
 	return &inMemoryStore
 }
 
-func (i *InMemoryStore) Persist(ctx context.Context, key, source, content string) error {
-	if _, isKeyExist := (*i)[key]; !isKeyExist {
-		(*i)[key] = make(map[string]string)
+func (i *InMemoryStore) ListSourcesByKey(_ context.Context, key string) ([]string, error) {
+	results := (*i)[key]
+	sources := make([]string, 0, len(results))
+	for source := range results {
+		sources = append(sources, source)
 	}
-	(*i)[key][source] = content
 
-	return nil
+	return sources, nil
 }
 
-func (i *InMemoryStore) LookUp(ctx context.Context, key, source string) (*event.Message, error) {
+func (i *InMemoryStore) LookUp(_ context.Context, key, source string) (*event.Message, error) {
 	content, isHit := (*i)[key][source]
 	if !isHit {
 		return nil, nil
@@ -33,7 +34,7 @@ func (i *InMemoryStore) LookUp(ctx context.Context, key, source string) (*event.
 	return event.NewMessage(key, source, content), nil
 }
 
-func (i *InMemoryStore) LookUpByKey(ctx context.Context, key string) ([]*event.Message, error) {
+func (i *InMemoryStore) LookUpByKey(_ context.Context, key string) ([]*event.Message, error) {
 	results := (*i)[key]
 	messages := make([]*event.Message, 0, len(results))
 	for source, content := range results {
@@ -41,4 +42,13 @@ func (i *InMemoryStore) LookUpByKey(ctx context.Context, key string) ([]*event.M
 	}
 
 	return messages, nil
+}
+
+func (i *InMemoryStore) Persist(_ context.Context, key, source, content string) error {
+	if _, isKeyExist := (*i)[key]; !isKeyExist {
+		(*i)[key] = make(map[string]string)
+	}
+	(*i)[key][source] = content
+
+	return nil
 }
