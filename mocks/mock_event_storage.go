@@ -40,6 +40,21 @@ func (m *MockEventStore) EXPECT() *MockEventStoreMockRecorder {
 	return m.recorder
 }
 
+// ListSourcesByKey mocks base method.
+func (m *MockEventStore) ListSourcesByKey(arg0 context.Context, arg1 string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListSourcesByKey", arg0, arg1)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListSourcesByKey indicates an expected call of ListSourcesByKey.
+func (mr *MockEventStoreMockRecorder) ListSourcesByKey(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSourcesByKey", reflect.TypeOf((*MockEventStore)(nil).ListSourcesByKey), arg0, arg1)
+}
+
 // LookUp mocks base method.
 func (m *MockEventStore) LookUp(arg0 context.Context, arg1, arg2 string) (*event.Message, error) {
 	m.ctrl.T.Helper()
