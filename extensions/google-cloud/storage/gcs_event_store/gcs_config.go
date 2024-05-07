@@ -3,6 +3,8 @@ package gcs_event_store
 import (
 	"context"
 	"time"
+
+	"github.com/lukecold/event-driver/utils/compression"
 )
 
 type Operation string
@@ -14,9 +16,10 @@ const (
 )
 
 type GCSConfig struct {
-	Bucket  string
-	Folder  *string
-	Timeout Timeout
+	Bucket     string
+	Compressor compression.Compressor
+	Folder     *string
+	Timeout    Timeout
 }
 
 type Timeout struct {
@@ -26,12 +29,19 @@ type Timeout struct {
 
 func Config(bucket string) *GCSConfig {
 	return &GCSConfig{
-		Bucket: bucket,
+		Bucket:     bucket,
+		Compressor: compression.Noop(),
 		Timeout: Timeout{
 			Default:   nil,
 			Operation: make(map[Operation]time.Duration),
 		},
 	}
+}
+
+func (c *GCSConfig) WithCompressor(compressor compression.Compressor) *GCSConfig {
+	c.Compressor = compressor
+
+	return c
 }
 
 func (c *GCSConfig) WithFolder(folder string) *GCSConfig {
