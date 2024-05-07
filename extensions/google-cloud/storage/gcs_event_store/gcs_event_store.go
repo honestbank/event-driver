@@ -13,6 +13,7 @@ import (
 
 	"github.com/lukecold/event-driver/event"
 	"github.com/lukecold/event-driver/storage"
+	"github.com/lukecold/event-driver/utils/compression"
 )
 
 // GCSEventStore persists the contents in GCS, which requires consistent connections to Google Cloud.
@@ -66,7 +67,7 @@ func (g *GCSEventStore) LookUp(ctx context.Context, key, source string) (*event.
 
 	filename := composePath(g.cfg.Folder, key, source)
 	readRequestCtx, _ := g.cfg.NewContextWithTimeout(ctx, ReadContent)
-	content, err := g.readFile(readRequestCtx, bucket, filename)
+	content, err := readFile(readRequestCtx, g.cfg.Compressor, bucket, filename)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +94,7 @@ func (g *GCSEventStore) LookUpByKey(ctx context.Context, key string) ([]*event.M
 			return messages, err
 		}
 		readRequestCtx, _ := g.cfg.NewContextWithTimeout(ctx, ReadContent)
-		content, err := g.readFile(readRequestCtx, bucket, object.Name)
+		content, err := readFile(readRequestCtx, g.cfg.Compressor, bucket, object.Name)
 		if err != nil {
 			return messages, err
 		}
@@ -110,28 +111,10 @@ func (g *GCSEventStore) LookUpByKey(ctx context.Context, key string) ([]*event.M
 // Persist uploads the message as a file on the path `folder/key/source`.
 func (g *GCSEventStore) Persist(ctx context.Context, key, source, content string) error {
 	bucket := g.client.Bucket(g.cfg.Bucket)
-
 	filename := composePath(g.cfg.Folder, key, source)
 	writeRequestCtx, _ := g.cfg.NewContextWithTimeout(ctx, WriteContent)
-	writer := bucket.Object(filename).NewWriter(writeRequestCtx)
-	if _, err := writer.Write([]byte(content)); err != nil {
-		return err
-	}
 
-	return writer.Close()
-}
-
-func (g *GCSEventStore) readFile(ctx context.Context, bucket *gcs.BucketHandle, filename string) ([]byte, error) {
-	reader, err := bucket.Object(filename).NewReader(ctx)
-	if err != nil {
-		if errors.Is(err, gcs.ErrObjectNotExist) {
-			return nil, nil
-		}
-
-		return nil, err
-	}
-
-	return io.ReadAll(reader)
+	return writeFile(writeRequestCtx, g.cfg.Compressor, bucket, filename, []byte(content))
 }
 
 func composePath(folder *string, keys ...string) string {
@@ -154,4 +137,43 @@ func parseFileName(filename string) (key, source string, err error) {
 	}
 
 	return split[len(split)-2], split[len(split)-1], nil
+}
+
+func readFile(
+	ctx context.Context,
+	compressor compression.Compressor,
+	bucket *gcs.BucketHandle,
+	filename string) ([]byte, error) {
+	reader, err := bucket.Object(filename).NewReader(ctx)
+	if err != nil {
+		if errors.Is(err, gcs.ErrObjectNotExist) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+	compressedContent, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	return compressor.Decompress(compressedContent)
+}
+
+func writeFile(
+	ctx context.Context,
+	compressor compression.Compressor,
+	bucket *gcs.BucketHandle,
+	filename string,
+	content []byte) error {
+	compressedContent, err := compressor.Compress(content)
+	if err != nil {
+		return err
+	}
+	writer := bucket.Object(filename).NewWriter(ctx)
+	if _, err = writer.Write(compressedContent); err != nil {
+		return err
+	}
+
+	return writer.Close()
 }
