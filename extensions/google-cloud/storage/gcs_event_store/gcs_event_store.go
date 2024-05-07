@@ -36,18 +36,28 @@ func New(ctx context.Context, cfg *GCSConfig, options ...option.ClientOption) (s
 	}, nil
 }
 
-// Persist uploads the message as a file on the path `folder/key/source`.
-func (g *GCSEventStore) Persist(ctx context.Context, key, source, content string) error {
+func (g *GCSEventStore) ListSourcesByKey(ctx context.Context, key string) ([]string, error) {
 	bucket := g.client.Bucket(g.cfg.Bucket)
 
-	filename := composePath(g.cfg.Folder, key, source)
-	writeRequestCtx, _ := g.cfg.NewContextWithTimeout(ctx, WriteContent)
-	writer := bucket.Object(filename).NewWriter(writeRequestCtx)
-	if _, err := writer.Write([]byte(content)); err != nil {
-		return err
+	sources := make([]string, 0)
+	listRequestCtx, _ := g.cfg.NewContextWithTimeout(ctx, ListContents)
+	objectIterator := bucket.Objects(listRequestCtx, &gcs.Query{Prefix: composePath(g.cfg.Folder, key) + "/"})
+	for {
+		object, err := objectIterator.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			return sources, err
+		}
+		_, source, err := parseFileName(object.Name)
+		if err != nil {
+			return sources, err
+		}
+		sources = append(sources, source)
 	}
 
-	return writer.Close()
+	return sources, nil
 }
 
 // LookUp returns a single message by looking up the path `folder/key/source`.
@@ -95,6 +105,20 @@ func (g *GCSEventStore) LookUpByKey(ctx context.Context, key string) ([]*event.M
 	}
 
 	return messages, nil
+}
+
+// Persist uploads the message as a file on the path `folder/key/source`.
+func (g *GCSEventStore) Persist(ctx context.Context, key, source, content string) error {
+	bucket := g.client.Bucket(g.cfg.Bucket)
+
+	filename := composePath(g.cfg.Folder, key, source)
+	writeRequestCtx, _ := g.cfg.NewContextWithTimeout(ctx, WriteContent)
+	writer := bucket.Object(filename).NewWriter(writeRequestCtx)
+	if _, err := writer.Write([]byte(content)); err != nil {
+		return err
+	}
+
+	return writer.Close()
 }
 
 func (g *GCSEventStore) readFile(ctx context.Context, bucket *gcs.BucketHandle, filename string) ([]byte, error) {
