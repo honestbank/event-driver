@@ -17,6 +17,7 @@ import (
 
 	"github.com/lukecold/event-driver/event"
 	"github.com/lukecold/event-driver/extensions/google-cloud/storage/gcs_event_store"
+	"github.com/lukecold/event-driver/utils/compression"
 )
 
 const (
