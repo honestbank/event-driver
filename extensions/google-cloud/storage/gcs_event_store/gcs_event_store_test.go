@@ -57,6 +57,10 @@ func TestGCSEventStore(t *testing.T) {
 		err = eventStore.Persist(context.TODO(), key, source, content)
 		assert.NoError(t, err)
 
+		sources, err := eventStore.ListSourcesByKey(context.TODO(), key)
+		assert.NoError(t, err)
+		assert.Equal(t, 2, len(sources))
+
 		message, err := eventStore.LookUp(context.TODO(), key, source)
 		assert.NoError(t, err)
 		assert.Equal(t, event.NewMessage(key, source, content), message)
@@ -97,6 +101,10 @@ func TestGCSEventStore(t *testing.T) {
 
 		err = eventStore.Persist(context.TODO(), key, source, content)
 		assert.NoError(t, err)
+
+		sources, err := eventStore.ListSourcesByKey(context.TODO(), key)
+		assert.NoError(t, err)
+		assert.Equal(t, 2, len(sources))
 
 		message, err := eventStore.LookUp(context.TODO(), key, source)
 		assert.NoError(t, err)
