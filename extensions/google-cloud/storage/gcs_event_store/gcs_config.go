@@ -19,6 +19,7 @@ type GCSConfig struct {
 	Bucket     string
 	Compressor compression.Compressor
 	Folder     *string
+	ReadPolicy ReadPolicy
 	Timeout    Timeout
 }
 
@@ -27,12 +28,19 @@ type Timeout struct {
 	Operation map[Operation]time.Duration // the timeout of each operation - this overrides the default timeout
 }
 
+// Config creates a default configuration, that
+// - doesn't do compression/decompression when write & read to GCS
+// - takes the earliest created object if there are multiple under the same key/source/ path
+// - enforces universal 30s timeout in GCS requests
 func Config(bucket string) *GCSConfig {
+	halfMinute := 30 * time.Second
+
 	return &GCSConfig{
 		Bucket:     bucket,
 		Compressor: compression.Noop(),
+		ReadPolicy: TakeFirstCreated(),
 		Timeout: Timeout{
-			Default:   nil,
+			Default:   &halfMinute,
 			Operation: make(map[Operation]time.Duration),
 		},
 	}
@@ -46,6 +54,12 @@ func (c *GCSConfig) WithCompressor(compressor compression.Compressor) *GCSConfig
 
 func (c *GCSConfig) WithFolder(folder string) *GCSConfig {
 	c.Folder = &folder
+
+	return c
+}
+
+func (c *GCSConfig) WithReadPolicy(readPolicy ReadPolicy) *GCSConfig {
+	c.ReadPolicy = readPolicy
 
 	return c
 }

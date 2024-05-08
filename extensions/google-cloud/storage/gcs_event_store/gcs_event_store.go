@@ -2,6 +2,8 @@ package gcs_event_store
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -41,8 +43,13 @@ func (g *GCSEventStore) ListSourcesByKey(ctx context.Context, key string) ([]str
 	bucket := g.client.Bucket(g.cfg.Bucket)
 
 	sources := make([]string, 0)
-	listRequestCtx, _ := g.cfg.NewContextWithTimeout(ctx, ListContents)
-	objectIterator := bucket.Objects(listRequestCtx, &gcs.Query{Prefix: composePath(g.cfg.Folder, key) + "/"})
+	listRequestCtx, cancel := g.cfg.NewContextWithTimeout(ctx, ListContents)
+	defer cancel()
+
+	objectIterator := bucket.Objects(listRequestCtx, &gcs.Query{
+		Prefix:    composePath(g.cfg.Folder, key) + "/",
+		Delimiter: "/",
+	})
 	for {
 		object, err := objectIterator.Next()
 		if errors.Is(err, iterator.Done) {
@@ -51,7 +58,7 @@ func (g *GCSEventStore) ListSourcesByKey(ctx context.Context, key string) ([]str
 		if err != nil {
 			return sources, err
 		}
-		_, source, err := parseFileName(object.Name)
+		_, source, err := parsePath(object.Name)
 		if err != nil {
 			return sources, err
 		}
@@ -65,9 +72,11 @@ func (g *GCSEventStore) ListSourcesByKey(ctx context.Context, key string) ([]str
 func (g *GCSEventStore) LookUp(ctx context.Context, key, source string) (*event.Message, error) {
 	bucket := g.client.Bucket(g.cfg.Bucket)
 
-	filename := composePath(g.cfg.Folder, key, source)
-	readRequestCtx, _ := g.cfg.NewContextWithTimeout(ctx, ReadContent)
-	content, err := readFile(readRequestCtx, g.cfg.Compressor, bucket, filename)
+	path := composePath(g.cfg.Folder, key, source)
+	readRequestCtx, cancel := g.cfg.NewContextWithTimeout(ctx, ReadContent)
+	defer cancel()
+
+	content, err := readFile(readRequestCtx, g.cfg.Compressor, bucket, path, g.cfg.ReadPolicy)
 	if err != nil {
 		return nil, err
 	}
@@ -83,10 +92,15 @@ func (g *GCSEventStore) LookUpByKey(ctx context.Context, key string) ([]*event.M
 	bucket := g.client.Bucket(g.cfg.Bucket)
 
 	messages := make([]*event.Message, 0)
-	listRequestCtx, _ := g.cfg.NewContextWithTimeout(ctx, ListContents)
-	objectIterator := bucket.Objects(listRequestCtx, &gcs.Query{Prefix: composePath(g.cfg.Folder, key) + "/"})
+	listRequestCtx, cancel := g.cfg.NewContextWithTimeout(ctx, ListContents)
+	defer cancel()
+
+	sourceIterator := bucket.Objects(listRequestCtx, &gcs.Query{
+		Prefix:    composePath(g.cfg.Folder, key) + "/",
+		Delimiter: "/",
+	})
 	for {
-		object, err := objectIterator.Next()
+		path, err := sourceIterator.Next()
 		if errors.Is(err, iterator.Done) {
 			break
 		}
@@ -94,11 +108,11 @@ func (g *GCSEventStore) LookUpByKey(ctx context.Context, key string) ([]*event.M
 			return messages, err
 		}
 		readRequestCtx, _ := g.cfg.NewContextWithTimeout(ctx, ReadContent)
-		content, err := readFile(readRequestCtx, g.cfg.Compressor, bucket, object.Name)
+		content, err := readFile(readRequestCtx, g.cfg.Compressor, bucket, path.Name, g.cfg.ReadPolicy)
 		if err != nil {
 			return messages, err
 		}
-		key, source, err := parseFileName(object.Name)
+		key, source, err := parsePath(path.Name)
 		if err != nil {
 			return messages, err
 		}
@@ -111,10 +125,11 @@ func (g *GCSEventStore) LookUpByKey(ctx context.Context, key string) ([]*event.M
 // Persist uploads the message as a file on the path `folder/key/source`.
 func (g *GCSEventStore) Persist(ctx context.Context, key, source, content string) error {
 	bucket := g.client.Bucket(g.cfg.Bucket)
-	filename := composePath(g.cfg.Folder, key, source)
-	writeRequestCtx, _ := g.cfg.NewContextWithTimeout(ctx, WriteContent)
+	path := composePath(g.cfg.Folder, key, source)
+	writeRequestCtx, cancel := g.cfg.NewContextWithTimeout(ctx, WriteContent)
+	defer cancel()
 
-	return writeFile(writeRequestCtx, g.cfg.Compressor, bucket, filename, []byte(content))
+	return writeFile(writeRequestCtx, g.cfg.Compressor, bucket, path, []byte(content))
 }
 
 func composePath(folder *string, keys ...string) string {
@@ -130,7 +145,7 @@ func composePath(folder *string, keys ...string) string {
 	return strings.Join(components, "/")
 }
 
-func parseFileName(filename string) (key, source string, err error) {
+func parsePath(filename string) (key, source string, err error) {
 	split := strings.Split(filename, "/")
 	if len(split) < 2 {
 		return "", "", fmt.Errorf("filename %s isn't of format 'folder/key/source'", filename)
@@ -143,8 +158,14 @@ func readFile(
 	ctx context.Context,
 	compressor compression.Compressor,
 	bucket *gcs.BucketHandle,
-	filename string) ([]byte, error) {
-	reader, err := bucket.Object(filename).NewReader(ctx)
+	path string,
+	readPolicy ReadPolicy) ([]byte, error) {
+	objectIterator := bucket.Objects(ctx, &gcs.Query{Prefix: path + "/"})
+	object, err := readPolicy.Apply(objectIterator)
+	if err != nil {
+		return nil, err
+	}
+	reader, err := bucket.Object(object.Name).NewReader(ctx)
 	if err != nil {
 		if errors.Is(err, gcs.ErrObjectNotExist) {
 			return nil, nil
@@ -164,12 +185,14 @@ func writeFile(
 	ctx context.Context,
 	compressor compression.Compressor,
 	bucket *gcs.BucketHandle,
-	filename string,
+	path string,
 	content []byte) error {
 	compressedContent, err := compressor.Compress(content)
 	if err != nil {
 		return err
 	}
+	sha := sha256.Sum256(compressedContent)
+	filename := fmt.Sprintf("%s/%s", path, base64.URLEncoding.EncodeToString(sha[:]))
 	writer := bucket.Object(filename).NewWriter(ctx)
 	if _, err = writer.Write(compressedContent); err != nil {
 		return err
