@@ -21,9 +21,9 @@ import (
 )
 
 const (
-	key     = "test-key"
-	source  = "test-source"
-	content = "test-content"
+	key     = "key"
+	source  = "source"
+	content = "content"
 )
 
 func TestGCSEventStore(t *testing.T) {
@@ -36,16 +36,23 @@ func TestGCSEventStore(t *testing.T) {
 				body, err := io.ReadAll(r.Body)
 				assert.NoError(t, err)
 				// assert that bucket, key, source, and content match
-				assert.Contains(t, string(body), fmt.Sprintf(`{"bucket":"bucket","name":"%s/%s/%s"}`, folderName, key, source))
+				assert.Contains(t, string(body), fmt.Sprintf(`{"bucket":"bucket","name":"%s/%s/%s`, folderName, key, source))
 				assert.Contains(t, string(body), content)
 				w.Write([]byte("{}"))
 			case strings.HasPrefix(r.URL.Path, fmt.Sprintf("/bucket/%s/%s/%s", folderName, key, source)): // read operation
 				w.Write([]byte(content))
 			case strings.HasPrefix(r.URL.Path, "/storage/v1/b/bucket/o"): // list operation
-				w.Write([]byte(`{
-				"kind":"storage#objects",
-				"items":[{"kind":"storage#object","name":"folderName/key/source1"},{"kind":"storage#object","name":"folderName/key/source2"}]
-			}`))
+				if strings.Contains(r.RequestURI, "delimiter=%2F") {
+					w.Write([]byte(`{
+						"kind":"storage#objects",
+						"items":[{"kind":"storage#object","name":"folder-name/key/source1"},{"kind":"storage#object","name":"folder-name/key/source2"}]
+					}`))
+				} else {
+					w.Write([]byte(`{
+						"kind":"storage#objects",
+						"items":[{"kind":"storage#object","name":"folder-name/key/source1/sha1"},{"kind":"storage#object","name":"folder-name/key/source1/sha2"}]
+					}`))
+				}
 			}
 		}))
 		defer server.Close()
@@ -75,21 +82,29 @@ func TestGCSEventStore(t *testing.T) {
 	t.Run("without folder prefix", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
+			fmt.Println(r.URL.Path)
 			switch {
 			case strings.HasPrefix(r.URL.Path, "/upload/"): // write operation
 				body, err := io.ReadAll(r.Body)
 				assert.NoError(t, err)
 				// assert that bucket, key, source, and content match
-				assert.Contains(t, string(body), fmt.Sprintf(`{"bucket":"bucket","name":"%s/%s"}`, key, source))
+				assert.Contains(t, string(body), fmt.Sprintf(`{"bucket":"bucket","name":"%s/%s`, key, source))
 				assert.Contains(t, string(body), content)
 				w.Write([]byte("{}"))
 			case strings.HasPrefix(r.URL.Path, fmt.Sprintf("/bucket/%s/%s", key, source)): // read operation
 				w.Write([]byte(content))
 			case strings.HasPrefix(r.URL.Path, "/storage/v1/b/bucket/o"): // list operation
-				w.Write([]byte(`{
-				"kind":"storage#objects",
-				"items":[{"kind":"storage#object","name":"key/source1"},{"kind":"storage#object","name":"key/source2"}]
-			}`))
+				if strings.Contains(r.RequestURI, "delimiter=%2F") {
+					w.Write([]byte(`{
+						"kind":"storage#objects",
+						"items":[{"kind":"storage#object","name":"key/source1"},{"kind":"storage#object","name":"key/source2"}]
+					}`))
+				} else {
+					w.Write([]byte(`{
+						"kind":"storage#objects",
+						"items":[{"kind":"storage#object","name":"key/source1/sha1"},{"kind":"storage#object","name":"key/source1/sha2"}]
+					}`))
+				}
 			}
 		}))
 		defer server.Close()
@@ -128,16 +143,23 @@ func TestGCSEventStore(t *testing.T) {
 				body, err := io.ReadAll(r.Body)
 				assert.NoError(t, err)
 				// assert that bucket, key, source, and content match
-				assert.Contains(t, string(body), fmt.Sprintf(`{"bucket":"bucket","name":"%s/%s"}`, key, source))
+				assert.Contains(t, string(body), fmt.Sprintf(`{"bucket":"bucket","name":"%s/%s`, key, source))
 				assert.Contains(t, string(body), string(compressedContent))
 				w.Write([]byte("{}"))
 			case strings.HasPrefix(r.URL.Path, fmt.Sprintf("/bucket/%s/%s", key, source)): // read operation
 				w.Write(compressedContent)
 			case strings.HasPrefix(r.URL.Path, "/storage/v1/b/bucket/o"): // list operation
-				w.Write([]byte(`{
-				"kind":"storage#objects",
-				"items":[{"kind":"storage#object","name":"key/source1"},{"kind":"storage#object","name":"key/source2"}]
-			}`))
+				if strings.Contains(r.RequestURI, "delimiter=%2F") {
+					w.Write([]byte(`{
+						"kind":"storage#objects",
+						"items":[{"kind":"storage#object","name":"key/source1"},{"kind":"storage#object","name":"key/source2"}]
+					}`))
+				} else {
+					w.Write([]byte(`{
+						"kind":"storage#objects",
+						"items":[{"kind":"storage#object","name":"key/source1/sha1"},{"kind":"storage#object","name":"key/source1/sha2"}]
+					}`))
+				}
 			}
 		}))
 		defer server.Close()

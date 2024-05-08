@@ -53,11 +53,15 @@ func TestGCSConfig(t *testing.T) {
 		assert.True(t, timeAfter.Add(defaultTimeout).After(deadline))
 	})
 
-	// neither operation timeout nor default timeout is configured
+	// when timeout isn't configured, use a universal timeout of 30s
 	cfgNoTimeout := gcs_event_store.Config("bucket")
 	t.Run("no timeout", func(t *testing.T) {
+		timeBefore := time.Now()
 		ctx, _ := cfgNoTimeout.NewContextWithTimeout(context.Background(), operationNotConfigured)
-		_, isDeadlineConfigured := ctx.Deadline()
-		assert.False(t, isDeadlineConfigured)
+		timeAfter := time.Now()
+		deadline, isDeadlineConfigured := ctx.Deadline()
+		assert.True(t, isDeadlineConfigured)
+		assert.True(t, timeBefore.Add(30*time.Second).Before(deadline))
+		assert.True(t, timeAfter.Add(30*time.Second).After(deadline))
 	})
 }
