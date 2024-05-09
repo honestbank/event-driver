@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.0.0](https://github.com/lukecold/event-driver/compare/v0.3.1...v1.0.0) (2024-05-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* Move event-driver under honestbank domain ([#55](https://github.com/lukecold/event-driver/issues/55))
+* Move event-driver to honestbank domain
+* **joiner+transformer:** Make joiner be able to join the map typed contents as is ([#54](https://github.com/lukecold/event-driver/issues/54))
+* **joiner+transformer:** Make joiner be able to join the map typed contents as is
+* **extensions/google-cloud:** GCSEventStore keep all storage by default ([#53](https://github.com/lukecold/event-driver/issues/53))
+* **extensions/google-cloud:** GCSEventStore should keep all storage by default
+* **golang+handler:** Use slog for formatted logging ([#47](https://github.com/lukecold/event-driver/issues/47))
+
+### Features
+
+* EventStore support looking up sources by key ([#49](https://github.com/lukecold/event-driver/issues/49)) ([282ba46](https://github.com/lukecold/event-driver/commit/282ba46169525739da1430e43a68532c8d34573b))
+* Extensions use the local version of event-driver as dependency ([#51](https://github.com/lukecold/event-driver/issues/51)) ([9f2cf48](https://github.com/lukecold/event-driver/commit/9f2cf48e4ce502d1ab176d6f95612967c6f2bd29))
+* **extensions/google-cloud:** GCSEventStore keep all storage by default ([#53](https://github.com/lukecold/event-driver/issues/53)) ([bdf52a6](https://github.com/lukecold/event-driver/commit/bdf52a67636ab31aaa4d08294096686cfd8e3015))
+* **extensions/google-cloud:** GCSEventStore should keep all storage by default ([1f26c97](https://github.com/lukecold/event-driver/commit/1f26c97a1ad4c97f2fc912d4f94586b876f13822))
+* **golang+handler:** Use slog for formatted logging ([#47](https://github.com/lukecold/event-driver/issues/47)) ([a93ad91](https://github.com/lukecold/event-driver/commit/a93ad915594cd5e1d7a2efaa3f80e3dfae4d9abd))
+* **joiner+transformer:** Make joiner be able to join the map typed contents as is ([c41f38a](https://github.com/lukecold/event-driver/commit/c41f38a120d783af8c6372a935a16df9346da383))
+* **joiner+transformer:** Make joiner be able to join the map typed contents as is ([#54](https://github.com/lukecold/event-driver/issues/54)) ([1f00c7d](https://github.com/lukecold/event-driver/commit/1f00c7d4ad455c68dbaa8d112c9a66928a146ab5))
+* Move event-driver to honestbank domain ([d2f6051](https://github.com/lukecold/event-driver/commit/d2f605114af17ea0ea640fb6c3ee1c04715907ee))
+* Move event-driver under honestbank domain ([#55](https://github.com/lukecold/event-driver/issues/55)) ([187f1de](https://github.com/lukecold/event-driver/commit/187f1dedbcd46f4ad7339bb40dbed2545442ee9c))
+* Support compressing the data before writing into GCS ([#52](https://github.com/lukecold/event-driver/issues/52)) ([55b8cfc](https://github.com/lukecold/event-driver/commit/55b8cfc6c8cefa2e18cc84ff6588000e6454e99c))
+
 ## [0.3.1](https://github.com/lukecold/event-driver/compare/v0.3.0...v0.3.1) (2024-04-17)
 
 
