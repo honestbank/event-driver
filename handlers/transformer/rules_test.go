@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/lukecold/event-driver/event"
-	"github.com/lukecold/event-driver/handlers/transformer"
+	"github.com/honestbank/event-driver/event"
+	"github.com/honestbank/event-driver/handlers/transformer"
 )
 
 const (

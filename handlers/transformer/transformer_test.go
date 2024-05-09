@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/lukecold/event-driver/event"
-	"github.com/lukecold/event-driver/handlers/transformer"
-	"github.com/lukecold/event-driver/mocks"
+	"github.com/honestbank/event-driver/event"
+	"github.com/honestbank/event-driver/handlers/transformer"
+	"github.com/honestbank/event-driver/mocks"
 )
 
 func TestTransformer(t *testing.T) {

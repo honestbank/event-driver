@@ -3,7 +3,7 @@ package handlers
 import (
 	"context"
 
-	"github.com/lukecold/event-driver/event"
+	"github.com/honestbank/event-driver/event"
 )
 
 type CallNext interface {

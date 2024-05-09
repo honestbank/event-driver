@@ -7,12 +7,12 @@ import (
 	"time"
 
 	gcs "cloud.google.com/go/storage"
-	"github.com/lukecold/event-driver/extensions/google-cloud/mocks"
+	"github.com/honestbank/event-driver/extensions/google-cloud/mocks"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
 
-	"github.com/lukecold/event-driver/extensions/google-cloud/storage/gcs_event_store"
+	"github.com/honestbank/event-driver/extensions/google-cloud/storage/gcs_event_store"
 )
 
 func TestTakeFirstCreatedPolicy(t *testing.T) {

@@ -8,7 +8,7 @@ test: generate
 sync_version:
 	for d in ./extensions/*/; do \
  		cd $$d; \
- 		go get github.com/lukecold/event-driver && go mod tidy; \
+ 		go get github.com/honestbank/event-driver && go mod tidy; \
  		cd -; \
 	done
 

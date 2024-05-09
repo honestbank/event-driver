@@ -9,7 +9,7 @@ repos:
       - id: detect-aws-credentials
         args: [ '--allow-missing-credentials' ]
   - repo: git@github.com:golangci/golangci-lint.git
-    rev: v1.58.0
+    rev: v1.58.1
     hooks:
       - id: golangci-lint
   - repo: git@github.com:TekWizely/pre-commit-golang.git

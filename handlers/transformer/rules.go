@@ -3,7 +3,7 @@ package transformer
 import (
 	"fmt"
 
-	"github.com/lukecold/event-driver/event"
+	"github.com/honestbank/event-driver/event"
 )
 
 // Rule defines a transformer rule that transforms the input event.Message.

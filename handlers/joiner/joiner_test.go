@@ -7,14 +7,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lukecold/event-driver/handlers/options"
+	"github.com/honestbank/event-driver/handlers/options"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/lukecold/event-driver/event"
-	"github.com/lukecold/event-driver/handlers/joiner"
-	"github.com/lukecold/event-driver/mocks"
-	"github.com/lukecold/event-driver/storage"
+	"github.com/honestbank/event-driver/event"
+	"github.com/honestbank/event-driver/handlers/joiner"
+	"github.com/honestbank/event-driver/mocks"
+	"github.com/honestbank/event-driver/storage"
 )
 
 func TestJoiner(t *testing.T) {

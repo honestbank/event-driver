@@ -1,19 +1,18 @@
-module github.com/lukecold/event-driver/extensions/cloudevents
+module github.com/honestbank/event-driver/extensions/cloudevents
 
 go 1.21
 
-replace github.com/lukecold/event-driver => ../../../event-driver
+replace github.com/honestbank/event-driver => ../../../event-driver
 
 require (
 	github.com/cloudevents/sdk-go/v2 v2.15.2
-	github.com/lukecold/event-driver v0.3.1
+	github.com/honestbank/event-driver v1.0.0
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/mock v0.4.0
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
@@ -24,6 +23,6 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.20.0 // indirect
+	golang.org/x/tools v0.21.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

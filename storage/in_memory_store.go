@@ -3,7 +3,7 @@ package storage
 import (
 	"context"
 
-	"github.com/lukecold/event-driver/event"
+	"github.com/honestbank/event-driver/event"
 )
 
 type InMemoryStore map[string]map[string]string // key -> source -> content
