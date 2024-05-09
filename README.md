@@ -1,10 +1,10 @@
 # Event Driver
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/lukecold/event-driver.svg)](https://pkg.go.dev/github.com/lukecold/event-driver)
-![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/lukecold/event-driver)
-![GitHub Release](https://img.shields.io/github/v/release/lukecold/event-driver)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=lukecold_event-driver&metric=alert_status)](https://sonarcloud.io/dashboard?id=lukecold_event-driver)
-![Sonar Coverage](https://img.shields.io/sonar/coverage/lukecold_event-driver?server=https%3A%2F%2Fsonarcloud.io)
+[![Go Reference](https://pkg.go.dev/badge/github.com/honestbank/event-driver.svg)](https://pkg.go.dev/github.com/honestbank/event-driver)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/honestbank/event-driver)
+![GitHub Release](https://img.shields.io/github/v/release/honestbank/event-driver)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=honestbank_event-driver&metric=alert_status)](https://sonarcloud.io/dashboard?id=honestbank_event-driver)
+![Sonar Coverage](https://img.shields.io/sonar/coverage/honestbank_event-driver?server=https%3A%2F%2Fsonarcloud.io)
 
 Event Driver is a lightweight and flexible event-driven programming framework for managing and handling events in your applications. It provides a simple and intuitive API to facilitate communication between different components or modules in your software.
 

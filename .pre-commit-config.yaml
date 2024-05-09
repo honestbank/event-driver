@@ -1,27 +1,25 @@
-exclude: docs/
 repos:
-  - repo: git@github.com:pre-commit/pre-commit-hooks.git
-    rev: v4.6.0
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
     hooks:
       - id: end-of-file-fixer
       - id: trailing-whitespace
       - id: check-yaml
       - id: detect-aws-credentials
         args: [ '--allow-missing-credentials' ]
-  - repo: git@github.com:golangci/golangci-lint.git
-    rev: v1.58.1
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v1.53.3
     hooks:
       - id: golangci-lint
-  - repo: git@github.com:TekWizely/pre-commit-golang.git
+  - repo: https://github.com/TekWizely/pre-commit-golang
     rev: v1.0.0-rc.1
     hooks:
+      - id: go-fmt
       - id: go-imports
-  - repo: local
+  - repo: https://github.com/gitguardian/ggshield
+    rev: v1.26.0
     hooks:
-      - id: generate-mocks
-        name: generate-mocks
-        entry: bash -c 'make generate'
-        language: system
-        types: [ bash ]
-        pass_filenames: false
-        always_run: true
+      - id: ggshield
+        language: python
+        stages: [commit]
+        args: ["secret", "scan", "pre-commit"]

@@ -1,0 +1,3 @@
+# Config file for https://github.com/zeke/semantic-pull-requests
+# Always validate the PR title, and ignore the commits
+titleOnly: true
