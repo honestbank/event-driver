@@ -16,11 +16,34 @@ const (
 	content = "test-content"
 )
 
+func TestEraseContentFromSources(t *testing.T) {
+	eraseContentFromSources := transformer.EraseContentFromSources("source1", "source2")
+
+	inputSourceToTransformedContent := map[string]string{
+		"source1": "",
+		"source2": "",
+		"source3": content,
+	}
+
+	for inputSource, expectedTransformedContent := range inputSourceToTransformedContent {
+		testName := fmt.Sprintf("transform %s", inputSource)
+		t.Run(testName, func(t *testing.T) {
+			transformed, err := eraseContentFromSources.Transform(event.NewMessage(key, inputSource, content))
+			assert.NoError(t, err)
+			assert.Equal(t, key, transformed.GetKey())
+			assert.Equal(t, inputSource, transformed.GetSource())
+			assert.Equal(t, expectedTransformedContent, transformed.GetContent())
+		})
+	}
+}
+
 func TestIdentityRule(t *testing.T) {
 	identity := transformer.Identity()
 	message := event.NewMessage(key, source, content)
 
-	assert.Equal(t, message, identity.Transform(message))
+	transformed, err := identity.Transform(message)
+	assert.NoError(t, err)
+	assert.Equal(t, message, transformed)
 }
 
 func TestRenameSourcesRule(t *testing.T) {
@@ -39,30 +62,11 @@ func TestRenameSourcesRule(t *testing.T) {
 	for inputSource, expectedTransformedSource := range inputSourceToTransformedSource {
 		testName := fmt.Sprintf("transform %s", inputSource)
 		t.Run(testName, func(t *testing.T) {
-			transformed := renameSources.Transform(event.NewMessage(key, inputSource, content))
+			transformed, err := renameSources.Transform(event.NewMessage(key, inputSource, content))
+			assert.NoError(t, err)
 			assert.Equal(t, key, transformed.GetKey())
 			assert.Equal(t, expectedTransformedSource, transformed.GetSource())
 			assert.Equal(t, content, transformed.GetContent())
-		})
-	}
-}
-
-func TestEraseContentFromSources(t *testing.T) {
-	eraseContentFromSources := transformer.EraseContentFromSources("source1", "source2")
-
-	inputSourceToTransformedContent := map[string]string{
-		"source1": "",
-		"source2": "",
-		"source3": content,
-	}
-
-	for inputSource, expectedTransformedContent := range inputSourceToTransformedContent {
-		testName := fmt.Sprintf("transform %s", inputSource)
-		t.Run(testName, func(t *testing.T) {
-			transformed := eraseContentFromSources.Transform(event.NewMessage(key, inputSource, content))
-			assert.Equal(t, key, transformed.GetKey())
-			assert.Equal(t, inputSource, transformed.GetSource())
-			assert.Equal(t, expectedTransformedContent, transformed.GetContent())
 		})
 	}
 }

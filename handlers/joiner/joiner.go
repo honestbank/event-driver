@@ -3,6 +3,7 @@ package joiner
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 
 	"github.com/lukecold/event-driver/event"
@@ -62,9 +63,17 @@ func (j *joiner) Process(ctx context.Context, in *event.Message, next handlers.C
 	}
 
 	// join sources
-	contentBySource := make(map[string]string)
+	contentBySource := make(map[string]interface{})
 	for _, message := range messages {
-		contentBySource[message.GetSource()] = message.GetContent()
+		var mapTypedContent map[string]interface{}
+		err = json.Unmarshal([]byte(message.GetContent()), &mapTypedContent)
+		if err == nil {
+			logger.Debug(fmt.Sprintf("content of of source %s is a map, putting it as is in the joint message", message.GetSource()))
+			contentBySource[message.GetSource()] = mapTypedContent
+		} else {
+			logger.Debug(fmt.Sprintf("content of of source %s is not a map, putting it as a string in the joint message", message.GetSource()))
+			contentBySource[message.GetSource()] = message.GetContent()
+		}
 	}
 	jointContent, err := json.Marshal(contentBySource)
 	if err != nil {

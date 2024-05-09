@@ -44,7 +44,12 @@ func (m *transformer) WithRules(rules ...Rule) *transformer {
 
 func (m *transformer) Process(ctx context.Context, in *event.Message, next handlers.CallNext) error {
 	logger := m.logger.With(slog.String("key", in.GetKey()), slog.String("source", in.GetSource()))
-	transformed := m.rule.Transform(in)
+	transformed, err := m.rule.Transform(in)
+	if err != nil {
+		logger.Error("failed to transform message", slog.Any("error", err))
+
+		return err
+	}
 	logger.Debug("transformed message")
 
 	return next.Call(ctx, transformed)

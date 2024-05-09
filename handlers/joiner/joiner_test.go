@@ -42,6 +42,30 @@ func TestJoiner(t *testing.T) {
 		assert.Contains(t, logs.String(), "joined message")
 	})
 
+	t.Run("joining map-typed content as is", func(t *testing.T) {
+		ctx := context.TODO()
+		input1 := event.NewMessage("key", "source1", `{"k":"v"}`)
+		input2 := event.NewMessage("key", "source2", "content2")
+
+		ctrl := gomock.NewController(t)
+		callNext := mocks.NewMockCallNext(ctrl)
+		condition := joiner.MatchAll("source1").
+			And(joiner.MatchAny("source2", "source3"))
+		eventStore := storage.NewInMemoryStore()
+
+		expectedMessage := event.NewMessage("key", "composed-event", `{"source1":{"k":"v"},"source2":"content2"}`)
+		callNext.EXPECT().Call(gomock.Any(), expectedMessage).AnyTimes()
+
+		logs := &strings.Builder{}
+		handler := joiner.New(condition, eventStore, options.WithLogLevel(slog.LevelDebug), options.WithLogWriter(logs))
+		err := handler.Process(ctx, input1, callNext)
+		assert.NoError(t, err)
+		assert.Contains(t, logs.String(), "got message, but condition isn't met yet")
+		err = handler.Process(ctx, input2, callNext)
+		assert.NoError(t, err)
+		assert.Contains(t, logs.String(), "joined message")
+	})
+
 	t.Run("condition not met", func(t *testing.T) {
 		ctx := context.TODO()
 		input1 := event.NewMessage("key", "source2", "content2")
