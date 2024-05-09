@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/lukecold/event-driver/event"
-	"github.com/lukecold/event-driver/handlers"
-	"github.com/lukecold/event-driver/handlers/options"
-	"github.com/lukecold/event-driver/storage"
+	"github.com/honestbank/event-driver/event"
+	"github.com/honestbank/event-driver/handlers"
+	"github.com/honestbank/event-driver/handlers/options"
+	"github.com/honestbank/event-driver/storage"
 )
 
 // joiner implements handlers.Handler that joins the events with the same key

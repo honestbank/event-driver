@@ -13,9 +13,9 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 
-	"github.com/lukecold/event-driver/event"
-	"github.com/lukecold/event-driver/storage"
-	"github.com/lukecold/event-driver/utils/compression"
+	"github.com/honestbank/event-driver/event"
+	"github.com/honestbank/event-driver/storage"
+	"github.com/honestbank/event-driver/utils/compression"
 )
 
 // GCSEventStore persists the contents in GCS, which requires consistent connections to Google Cloud.

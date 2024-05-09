@@ -3,8 +3,8 @@ package cache
 import (
 	"context"
 
-	"github.com/lukecold/event-driver/event"
-	"github.com/lukecold/event-driver/handlers"
+	"github.com/honestbank/event-driver/event"
+	"github.com/honestbank/event-driver/handlers"
 )
 
 // ConflictResolver implements handlers.Handler that resolves the case

@@ -15,9 +15,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/option"
 
-	"github.com/lukecold/event-driver/event"
-	"github.com/lukecold/event-driver/extensions/google-cloud/storage/gcs_event_store"
-	"github.com/lukecold/event-driver/utils/compression"
+	"github.com/honestbank/event-driver/event"
+	"github.com/honestbank/event-driver/extensions/google-cloud/storage/gcs_event_store"
+	"github.com/honestbank/event-driver/utils/compression"
 )
 
 const (

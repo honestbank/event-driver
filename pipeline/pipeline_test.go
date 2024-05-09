@@ -8,9 +8,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/lukecold/event-driver/event"
-	"github.com/lukecold/event-driver/handlers"
-	"github.com/lukecold/event-driver/pipeline"
+	"github.com/honestbank/event-driver/event"
+	"github.com/honestbank/event-driver/handlers"
+	"github.com/honestbank/event-driver/pipeline"
 )
 
 type testHandler struct {

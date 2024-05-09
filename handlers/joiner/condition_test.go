@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/lukecold/event-driver/handlers/joiner"
+	"github.com/honestbank/event-driver/handlers/joiner"
 )
 
 type conditionTestCase struct {

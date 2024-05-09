@@ -4,7 +4,7 @@ import (
 	"compress/gzip"
 	"testing"
 
-	"github.com/lukecold/event-driver/utils/compression"
+	"github.com/honestbank/event-driver/utils/compression"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -8,8 +8,8 @@ import (
 
 	cloudEvents "github.com/cloudevents/sdk-go/v2"
 
-	"github.com/lukecold/event-driver/event"
-	"github.com/lukecold/event-driver/pipeline"
+	"github.com/honestbank/event-driver/event"
+	"github.com/honestbank/event-driver/pipeline"
 )
 
 // InputConverter converts the KNativeEventHandler input to pipeline.Pipeline input.

@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/lukecold/event-driver/event"
+	"github.com/honestbank/event-driver/event"
 )
 
 type KeyExtractor interface {

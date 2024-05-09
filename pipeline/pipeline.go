@@ -5,9 +5,9 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/lukecold/event-driver/event"
-	"github.com/lukecold/event-driver/handlers"
-	"github.com/lukecold/event-driver/utils/reflect"
+	"github.com/honestbank/event-driver/event"
+	"github.com/honestbank/event-driver/handlers"
+	"github.com/honestbank/event-driver/utils/reflect"
 )
 
 type Pipeline interface {

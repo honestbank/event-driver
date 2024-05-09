@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/lukecold/event-driver/extensions/google-cloud/storage/gcs_event_store"
+	"github.com/honestbank/event-driver/extensions/google-cloud/storage/gcs_event_store"
 )
 
 func TestGCSConfig(t *testing.T) {

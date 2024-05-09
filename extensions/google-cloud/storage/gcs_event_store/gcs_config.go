@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/lukecold/event-driver/utils/compression"
+	"github.com/honestbank/event-driver/utils/compression"
 )
 
 type Operation string

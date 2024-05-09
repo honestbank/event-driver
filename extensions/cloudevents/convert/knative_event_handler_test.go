@@ -12,9 +12,9 @@ import (
 	cloudEventTypes "github.com/cloudevents/sdk-go/v2/types"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/lukecold/event-driver/event"
-	"github.com/lukecold/event-driver/extensions/cloudevents/convert"
-	"github.com/lukecold/event-driver/pipeline"
+	"github.com/honestbank/event-driver/event"
+	"github.com/honestbank/event-driver/extensions/cloudevents/convert"
+	"github.com/honestbank/event-driver/pipeline"
 )
 
 const (

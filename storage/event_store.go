@@ -3,7 +3,7 @@ package storage
 import (
 	"context"
 
-	"github.com/lukecold/event-driver/event"
+	"github.com/honestbank/event-driver/event"
 )
 
 // EventStore persists an event by key & source, and looks up an event by key+source, or a collection of events by key.
