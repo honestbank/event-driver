@@ -3,10 +3,11 @@ package pipeline
 import (
 	"context"
 	"errors"
-	"log"
+	"log/slog"
 
 	"github.com/lukecold/event-driver/event"
 	"github.com/lukecold/event-driver/handlers"
+	"github.com/lukecold/event-driver/utils/reflect"
 )
 
 type Pipeline interface {
@@ -59,12 +60,14 @@ func (p *pipeline) Process(ctx context.Context, in *event.Message) error {
 			select {
 			case gotError := <-errorChan:
 				if gotError != nil {
-					log.Printf("[ERROR] handler at index %d failed with error %v", index, gotError)
+					slog.Error("pipeline failed with error", slog.Int("index", index),
+						slog.String("handler", reflect.GetType(p.handlers[index])), slog.Any("error", gotError))
 				}
 
 				return gotError
 			case <-handlerCtx.Done():
-				log.Printf("[ERROR] handler at index %d timed out", index)
+				slog.Error("pipeline timed out", slog.Int("index", index),
+					slog.String("handler", reflect.GetType(p.handlers[index])))
 
 				return errors.New("pipeline timed out")
 			}

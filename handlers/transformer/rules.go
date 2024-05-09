@@ -8,24 +8,43 @@ import (
 
 // Rule defines a transformer rule that transforms the input event.Message.
 // The input event.Message might be updated by the rule.
-type Rule func(*event.Message) *event.Message
+type Rule func(*event.Message) (*event.Message, error)
 
-func (r Rule) Transform(in *event.Message) *event.Message {
+func (r Rule) Transform(in *event.Message) (*event.Message, error) {
 	return r(in)
 }
 
 func (r Rule) append(next Rule) Rule {
-	return func(message *event.Message) *event.Message {
-		currentResult := r(message)
+	return func(message *event.Message) (*event.Message, error) {
+		currentResult, err := r(message)
+		if err != nil {
+			return nil, err
+		}
 
 		return next.Transform(currentResult)
 	}
 }
 
+// EraseContentFromSources returns a Rule that erases the message content if source is in the list.
+func EraseContentFromSources(sources ...string) Rule {
+	shouldErase := make(map[string]bool)
+	for _, source := range sources {
+		shouldErase[source] = true
+	}
+
+	return func(message *event.Message) (*event.Message, error) {
+		if shouldErase[message.GetSource()] {
+			message.SetContent("")
+		}
+
+		return message, nil
+	}
+}
+
 // Identity returns the Rule that keeps the input as is.
 func Identity() Rule {
-	return func(in *event.Message) *event.Message {
-		return in
+	return func(in *event.Message) (*event.Message, error) {
+		return in, nil
 	}
 }
 
@@ -44,28 +63,12 @@ func RenameSources(aliasMap map[string][]string) (Rule, error) {
 		}
 	}
 
-	return func(message *event.Message) *event.Message {
+	return func(message *event.Message) (*event.Message, error) {
 		source := message.GetSource()
 		if name, isAlias := reverseMap[source]; isAlias {
 			message.SetSource(name)
 		}
 
-		return message
+		return message, nil
 	}, nil
-}
-
-// EraseContentFromSources returns a Rule that erases the message content if source is in the list.
-func EraseContentFromSources(sources ...string) Rule {
-	shouldErase := make(map[string]bool)
-	for _, source := range sources {
-		shouldErase[source] = true
-	}
-
-	return func(message *event.Message) *event.Message {
-		if shouldErase[message.GetSource()] {
-			message.SetContent("")
-		}
-
-		return message
-	}
 }

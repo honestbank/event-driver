@@ -14,21 +14,32 @@ import (
 )
 
 type testHandler struct {
-	processTime time.Duration
-	err         error
+	processTime  time.Duration
+	err          error
+	rethrowError func(error) error
 }
 
 func createHandler(processTime time.Duration) handlers.Handler {
 	return &testHandler{
-		processTime: processTime,
-		err:         nil,
+		processTime:  processTime,
+		err:          nil,
+		rethrowError: func(err error) error { return err },
+	}
+}
+
+func createRethrowErrorHandler(processTime time.Duration, rethrowError func(err error) error) handlers.Handler {
+	return &testHandler{
+		processTime:  processTime,
+		err:          nil,
+		rethrowError: rethrowError,
 	}
 }
 
 func createFailedHandler(processTime time.Duration, err error) handlers.Handler {
 	return &testHandler{
-		processTime: processTime,
-		err:         err,
+		processTime:  processTime,
+		err:          err,
+		rethrowError: func(err error) error { return err },
 	}
 }
 
@@ -37,8 +48,9 @@ func (h *testHandler) Process(ctx context.Context, in *event.Message, next handl
 	if h.err != nil {
 		return h.err
 	}
+	err := next.Call(ctx, in)
 
-	return next.Call(ctx, in)
+	return h.rethrowError(err)
 }
 
 func TestPipelineFail(t *testing.T) {
@@ -57,6 +69,18 @@ func TestPipelineFail(t *testing.T) {
 			WithNextHandler(createHandler(time.Nanosecond)).
 			WithNextHandler(createFailedHandler(time.Nanosecond, expectedError)).
 			WithNextHandler(createFailedHandler(time.Nanosecond, errors.New("other error")))
+
+		err := testPipeline.Process(context.Background(), nil)
+		assert.Equal(t, expectedError, err)
+	})
+
+	t.Run("rethrow error from downstream", func(t *testing.T) {
+		expectedError := errors.New("rethrown error")
+		testPipeline := pipeline.New().
+			WithNextHandler(createRethrowErrorHandler(time.Nanosecond, func(err error) error {
+				return expectedError
+			})).
+			WithNextHandler(createFailedHandler(time.Nanosecond, errors.New("original error")))
 
 		err := testPipeline.Process(context.Background(), nil)
 		assert.Equal(t, expectedError, err)
