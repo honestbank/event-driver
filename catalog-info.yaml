@@ -1,0 +1,16 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: event-driver
+  description: Org-wise framework library in golang, for managing and handling events in applications.
+  annotations:
+    github.com/project-slug: honestbank/event-driver
+    github.com/team-slug: honestbank/backend-engineers
+    sonarqube.org/project-key: honestbank_event-driver
+  tags:
+    - language:golang
+spec:
+  type: library
+  lifecycle: production
+  owner: group:mlops-squad

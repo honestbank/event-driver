@@ -1,0 +1,54 @@
+name: repository-snyk-go
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+env:
+  GOPRIVATE: github.com/honestbank
+  APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
+
+jobs:
+  shared-snyk-go:
+    name: shared-snyk-go
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+
+      - name: Configure ssh-key for private modules
+        env:
+          SSH_KEY: ${{ secrets.ENGINEERING_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh; echo "$SSH_KEY" > ~/.ssh/id_rsa; chmod 600 ~/.ssh/id_rsa; git config --global url."git@github.com:".insteadOf "https://github.com/"
+
+      - name: Download dependencies
+        run: |
+          make generate || true
+          go mod vendor
+
+      - name: Run Snyk monitor to check for vulnerabilities
+        uses: snyk/actions/golang@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_ACCESS_TOKEN }}
+        with:
+          command: monitor
+          args: --org=${{ vars.SNYK_MLOPS_ORG_ID }}
+
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/golang@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_ACCESS_TOKEN }}
+        with:
+          args: --severity-threshold=high
