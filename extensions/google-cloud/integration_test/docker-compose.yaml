@@ -1,0 +1,6 @@
+version: "3.9"
+services:
+  gcs:
+    image: oittaa/gcp-storage-emulator:latest
+    ports:
+      - "19081:8080"

@@ -58,7 +58,7 @@ func (g *GCSEventStore) ListSourcesByKey(ctx context.Context, key string) ([]str
 		if err != nil {
 			return sources, err
 		}
-		_, source, err := parsePath(object.Name)
+		_, source, err := parsePath(object.Prefix)
 		if err != nil {
 			return sources, err
 		}
@@ -108,11 +108,11 @@ func (g *GCSEventStore) LookUpByKey(ctx context.Context, key string) ([]*event.M
 			return messages, err
 		}
 		readRequestCtx, _ := g.cfg.NewContextWithTimeout(ctx, ReadContent)
-		content, err := readFile(readRequestCtx, g.cfg.Compressor, bucket, path.Name, g.cfg.ReadPolicy)
+		content, err := readFile(readRequestCtx, g.cfg.Compressor, bucket, path.Prefix, g.cfg.ReadPolicy)
 		if err != nil {
 			return messages, err
 		}
-		key, source, err := parsePath(path.Name)
+		key, source, err := parsePath(path.Prefix)
 		if err != nil {
 			return messages, err
 		}
@@ -145,10 +145,11 @@ func composePath(folder *string, keys ...string) string {
 	return strings.Join(components, "/")
 }
 
-func parsePath(filename string) (key, source string, err error) {
-	split := strings.Split(filename, "/")
+func parsePath(path string) (key, source string, err error) {
+	trimmedPath := strings.TrimSuffix(path, "/")
+	split := strings.Split(trimmedPath, "/")
 	if len(split) < 2 {
-		return "", "", fmt.Errorf("filename %s isn't of format 'folder/key/source'", filename)
+		return "", "", fmt.Errorf("path %s isn't of format 'folder/key/source'", path)
 	}
 
 	return split[len(split)-2], split[len(split)-1], nil
@@ -160,7 +161,10 @@ func readFile(
 	bucket *gcs.BucketHandle,
 	path string,
 	readPolicy ReadPolicy) ([]byte, error) {
-	objectIterator := bucket.Objects(ctx, &gcs.Query{Prefix: path + "/"})
+	if !strings.HasSuffix(path, "/") {
+		path = path + "/"
+	}
+	objectIterator := bucket.Objects(ctx, &gcs.Query{Prefix: path})
 	object, err := readPolicy.Apply(objectIterator)
 	if err != nil {
 		return nil, err
