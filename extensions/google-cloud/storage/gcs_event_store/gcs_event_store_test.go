@@ -34,6 +34,26 @@ func TestGCSEventStore(t *testing.T) {
 	_ = os.Setenv("STORAGE_EMULATOR_HOST", "localhost:19081")
 	folderName := "folder-name"
 
+	t.Run("query empty bucket", func(t *testing.T) {
+		bucket := "empty-bucket"
+		setup(t, bucket)
+		config := gcs_event_store.Config(bucket).WithFolder(folderName)
+		eventStore, err := gcs_event_store.New(context.TODO(), config, option.WithoutAuthentication())
+		assert.NoError(t, err)
+
+		sources, err := eventStore.ListSourcesByKey(context.TODO(), key)
+		assert.NoError(t, err)
+		assert.ElementsMatch(t, []string{}, sources)
+
+		message, err := eventStore.LookUp(context.TODO(), key, source1)
+		assert.NoError(t, err)
+		assert.Nil(t, message)
+
+		messageArray, err := eventStore.LookUpByKey(context.TODO(), key)
+		assert.NoError(t, err)
+		assert.ElementsMatch(t, []*event.Message{}, messageArray)
+	})
+
 	t.Run("with folder prefix", func(t *testing.T) {
 		bucket := "with-prefix"
 		setup(t, bucket)

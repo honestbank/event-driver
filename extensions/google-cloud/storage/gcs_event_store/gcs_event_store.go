@@ -112,6 +112,9 @@ func (g *GCSEventStore) LookUpByKey(ctx context.Context, key string) ([]*event.M
 		if err != nil {
 			return messages, err
 		}
+		if content == nil {
+			continue
+		}
 		key, source, err := parsePath(path.Prefix)
 		if err != nil {
 			return messages, err
@@ -168,6 +171,9 @@ func readFile(
 	object, err := readPolicy.Apply(objectIterator)
 	if err != nil {
 		return nil, err
+	}
+	if object == nil {
+		return nil, nil
 	}
 	reader, err := bucket.Object(object.Name).NewReader(ctx)
 	if err != nil {
