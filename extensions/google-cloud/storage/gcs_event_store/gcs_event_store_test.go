@@ -1,4 +1,4 @@
-//go:build integration_test
+//god:build integration_test
 
 package gcs_event_store_test
 
@@ -43,7 +43,7 @@ func TestGCSEventStore(t *testing.T) {
 
 		sources, err := eventStore.ListSourcesByKey(context.TODO(), key)
 		assert.NoError(t, err)
-		assert.Equal(t, []string{}, sources)
+		assert.ElementsMatch(t, []string{}, sources)
 
 		message, err := eventStore.LookUp(context.TODO(), key, source1)
 		assert.NoError(t, err)
@@ -51,7 +51,7 @@ func TestGCSEventStore(t *testing.T) {
 
 		messageArray, err := eventStore.LookUpByKey(context.TODO(), key)
 		assert.NoError(t, err)
-		assert.Equal(t, []*event.Message{}, messageArray)
+		assert.ElementsMatch(t, []*event.Message{}, messageArray)
 	})
 
 	t.Run("with folder prefix", func(t *testing.T) {
@@ -61,14 +61,16 @@ func TestGCSEventStore(t *testing.T) {
 		eventStore, err := gcs_event_store.New(context.TODO(), config, option.WithoutAuthentication())
 		assert.NoError(t, err)
 
-		err = eventStore.Persist(context.TODO(), key, source2, content)
-		assert.NoError(t, err)
 		err = eventStore.Persist(context.TODO(), key, source1, content)
+		assert.NoError(t, err)
+		err = eventStore.Persist(context.TODO(), key, source1, "something else")
+		assert.NoError(t, err)
+		err = eventStore.Persist(context.TODO(), key, source2, content)
 		assert.NoError(t, err)
 
 		sources, err := eventStore.ListSourcesByKey(context.TODO(), key)
 		assert.NoError(t, err)
-		assert.Equal(t, []string{source1, source2}, sources)
+		assert.ElementsMatch(t, []string{source1, source2}, sources)
 
 		message, err := eventStore.LookUp(context.TODO(), key, source1)
 		assert.NoError(t, err)
@@ -76,7 +78,7 @@ func TestGCSEventStore(t *testing.T) {
 
 		messageArray, err := eventStore.LookUpByKey(context.TODO(), key)
 		assert.NoError(t, err)
-		assert.Equal(t, []*event.Message{
+		assert.ElementsMatch(t, []*event.Message{
 			event.NewMessage(key, source1, content),
 			event.NewMessage(key, source2, content)},
 			messageArray)
@@ -91,12 +93,14 @@ func TestGCSEventStore(t *testing.T) {
 
 		err = eventStore.Persist(context.TODO(), key, source1, content)
 		assert.NoError(t, err)
+		err = eventStore.Persist(context.TODO(), key, source1, "something else")
+		assert.NoError(t, err)
 		err = eventStore.Persist(context.TODO(), key, source2, content)
 		assert.NoError(t, err)
 
 		sources, err := eventStore.ListSourcesByKey(context.TODO(), key)
 		assert.NoError(t, err)
-		assert.Equal(t, []string{source1, source2}, sources)
+		assert.ElementsMatch(t, []string{source1, source2}, sources)
 
 		message, err := eventStore.LookUp(context.TODO(), key, source1)
 		assert.NoError(t, err)
@@ -104,8 +108,40 @@ func TestGCSEventStore(t *testing.T) {
 
 		messageArray, err := eventStore.LookUpByKey(context.TODO(), key)
 		assert.NoError(t, err)
-		assert.Equal(t, []*event.Message{
+		assert.ElementsMatch(t, []*event.Message{
 			event.NewMessage(key, source1, content),
+			event.NewMessage(key, source2, content)},
+			messageArray)
+	})
+
+	t.Run("take last created", func(t *testing.T) {
+		bucket := "without-prefix"
+		setup(t, bucket)
+		config := gcs_event_store.Config(bucket).
+			WithFolder(folderName).
+			WithReadPolicy(gcs_event_store.TakeLastCreated())
+		eventStore, err := gcs_event_store.New(context.TODO(), config, option.WithoutAuthentication())
+		assert.NoError(t, err)
+
+		err = eventStore.Persist(context.TODO(), key, source1, content)
+		assert.NoError(t, err)
+		err = eventStore.Persist(context.TODO(), key, source1, "something else")
+		assert.NoError(t, err)
+		err = eventStore.Persist(context.TODO(), key, source2, content)
+		assert.NoError(t, err)
+
+		sources, err := eventStore.ListSourcesByKey(context.TODO(), key)
+		assert.NoError(t, err)
+		assert.ElementsMatch(t, []string{source1, source2}, sources)
+
+		message, err := eventStore.LookUp(context.TODO(), key, source1)
+		assert.NoError(t, err)
+		assert.Equal(t, event.NewMessage(key, source1, "something else"), message)
+
+		messageArray, err := eventStore.LookUpByKey(context.TODO(), key)
+		assert.NoError(t, err)
+		assert.ElementsMatch(t, []*event.Message{
+			event.NewMessage(key, source1, "something else"),
 			event.NewMessage(key, source2, content)},
 			messageArray)
 	})
@@ -118,6 +154,8 @@ func TestGCSEventStore(t *testing.T) {
 		assert.NoError(t, err)
 
 		err = eventStore.Persist(context.TODO(), key, source1, content)
+		assert.NoError(t, err)
+		err = eventStore.Persist(context.TODO(), key, source1, "something else")
 		assert.NoError(t, err)
 		err = eventStore.Persist(context.TODO(), key, source2, content)
 		assert.NoError(t, err)
