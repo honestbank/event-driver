@@ -43,7 +43,7 @@ func TestGCSEventStore(t *testing.T) {
 
 		sources, err := eventStore.ListSourcesByKey(context.TODO(), key)
 		assert.NoError(t, err)
-		assert.ElementsMatch(t, []string{}, sources)
+		assert.Equal(t, []string{}, sources)
 
 		message, err := eventStore.LookUp(context.TODO(), key, source1)
 		assert.NoError(t, err)
@@ -51,7 +51,7 @@ func TestGCSEventStore(t *testing.T) {
 
 		messageArray, err := eventStore.LookUpByKey(context.TODO(), key)
 		assert.NoError(t, err)
-		assert.ElementsMatch(t, []*event.Message{}, messageArray)
+		assert.Equal(t, []*event.Message{}, messageArray)
 	})
 
 	t.Run("with folder prefix", func(t *testing.T) {
@@ -61,14 +61,14 @@ func TestGCSEventStore(t *testing.T) {
 		eventStore, err := gcs_event_store.New(context.TODO(), config, option.WithoutAuthentication())
 		assert.NoError(t, err)
 
-		err = eventStore.Persist(context.TODO(), key, source1, content)
-		assert.NoError(t, err)
 		err = eventStore.Persist(context.TODO(), key, source2, content)
+		assert.NoError(t, err)
+		err = eventStore.Persist(context.TODO(), key, source1, content)
 		assert.NoError(t, err)
 
 		sources, err := eventStore.ListSourcesByKey(context.TODO(), key)
 		assert.NoError(t, err)
-		assert.ElementsMatch(t, []string{source1, source2}, sources)
+		assert.Equal(t, []string{source1, source2}, sources)
 
 		message, err := eventStore.LookUp(context.TODO(), key, source1)
 		assert.NoError(t, err)
@@ -76,7 +76,7 @@ func TestGCSEventStore(t *testing.T) {
 
 		messageArray, err := eventStore.LookUpByKey(context.TODO(), key)
 		assert.NoError(t, err)
-		assert.ElementsMatch(t, []*event.Message{
+		assert.Equal(t, []*event.Message{
 			event.NewMessage(key, source1, content),
 			event.NewMessage(key, source2, content)},
 			messageArray)
@@ -96,7 +96,7 @@ func TestGCSEventStore(t *testing.T) {
 
 		sources, err := eventStore.ListSourcesByKey(context.TODO(), key)
 		assert.NoError(t, err)
-		assert.ElementsMatch(t, []string{source1, source2}, sources)
+		assert.Equal(t, []string{source1, source2}, sources)
 
 		message, err := eventStore.LookUp(context.TODO(), key, source1)
 		assert.NoError(t, err)
@@ -104,7 +104,7 @@ func TestGCSEventStore(t *testing.T) {
 
 		messageArray, err := eventStore.LookUpByKey(context.TODO(), key)
 		assert.NoError(t, err)
-		assert.ElementsMatch(t, []*event.Message{
+		assert.Equal(t, []*event.Message{
 			event.NewMessage(key, source1, content),
 			event.NewMessage(key, source2, content)},
 			messageArray)
