@@ -34,6 +34,26 @@ func TestGCSEventStore(t *testing.T) {
 	_ = os.Setenv("STORAGE_EMULATOR_HOST", "localhost:19081")
 	folderName := "folder-name"
 
+	t.Run("query empty bucket", func(t *testing.T) {
+		bucket := "empty-bucket"
+		setup(t, bucket)
+		config := gcs_event_store.Config(bucket).WithFolder(folderName)
+		eventStore, err := gcs_event_store.New(context.TODO(), config, option.WithoutAuthentication())
+		assert.NoError(t, err)
+
+		sources, err := eventStore.ListSourcesByKey(context.TODO(), key)
+		assert.NoError(t, err)
+		assert.ElementsMatch(t, []string{}, sources)
+
+		message, err := eventStore.LookUp(context.TODO(), key, source1)
+		assert.NoError(t, err)
+		assert.Nil(t, message)
+
+		messageArray, err := eventStore.LookUpByKey(context.TODO(), key)
+		assert.NoError(t, err)
+		assert.ElementsMatch(t, []*event.Message{}, messageArray)
+	})
+
 	t.Run("with folder prefix", func(t *testing.T) {
 		bucket := "with-prefix"
 		setup(t, bucket)
@@ -42,6 +62,8 @@ func TestGCSEventStore(t *testing.T) {
 		assert.NoError(t, err)
 
 		err = eventStore.Persist(context.TODO(), key, source1, content)
+		assert.NoError(t, err)
+		err = eventStore.Persist(context.TODO(), key, source1, "something else")
 		assert.NoError(t, err)
 		err = eventStore.Persist(context.TODO(), key, source2, content)
 		assert.NoError(t, err)
@@ -71,6 +93,8 @@ func TestGCSEventStore(t *testing.T) {
 
 		err = eventStore.Persist(context.TODO(), key, source1, content)
 		assert.NoError(t, err)
+		err = eventStore.Persist(context.TODO(), key, source1, "something else")
+		assert.NoError(t, err)
 		err = eventStore.Persist(context.TODO(), key, source2, content)
 		assert.NoError(t, err)
 
@@ -90,6 +114,38 @@ func TestGCSEventStore(t *testing.T) {
 			messageArray)
 	})
 
+	t.Run("take last created", func(t *testing.T) {
+		bucket := "without-prefix"
+		setup(t, bucket)
+		config := gcs_event_store.Config(bucket).
+			WithFolder(folderName).
+			WithReadPolicy(gcs_event_store.TakeLastCreated())
+		eventStore, err := gcs_event_store.New(context.TODO(), config, option.WithoutAuthentication())
+		assert.NoError(t, err)
+
+		err = eventStore.Persist(context.TODO(), key, source1, content)
+		assert.NoError(t, err)
+		err = eventStore.Persist(context.TODO(), key, source1, "something else")
+		assert.NoError(t, err)
+		err = eventStore.Persist(context.TODO(), key, source2, content)
+		assert.NoError(t, err)
+
+		sources, err := eventStore.ListSourcesByKey(context.TODO(), key)
+		assert.NoError(t, err)
+		assert.ElementsMatch(t, []string{source1, source2}, sources)
+
+		message, err := eventStore.LookUp(context.TODO(), key, source1)
+		assert.NoError(t, err)
+		assert.Equal(t, event.NewMessage(key, source1, "something else"), message)
+
+		messageArray, err := eventStore.LookUpByKey(context.TODO(), key)
+		assert.NoError(t, err)
+		assert.ElementsMatch(t, []*event.Message{
+			event.NewMessage(key, source1, "something else"),
+			event.NewMessage(key, source2, content)},
+			messageArray)
+	})
+
 	t.Run("with compression", func(t *testing.T) {
 		bucket := "with-compression"
 		setup(t, bucket)
@@ -98,6 +154,8 @@ func TestGCSEventStore(t *testing.T) {
 		assert.NoError(t, err)
 
 		err = eventStore.Persist(context.TODO(), key, source1, content)
+		assert.NoError(t, err)
+		err = eventStore.Persist(context.TODO(), key, source1, "something else")
 		assert.NoError(t, err)
 		err = eventStore.Persist(context.TODO(), key, source2, content)
 		assert.NoError(t, err)

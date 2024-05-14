@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	gcs "cloud.google.com/go/storage"
+	"github.com/samber/lo"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 
@@ -56,16 +57,16 @@ func (g *GCSEventStore) ListSourcesByKey(ctx context.Context, key string) ([]str
 			break
 		}
 		if err != nil {
-			return sources, err
+			return lo.Uniq(sources), err
 		}
 		_, source, err := parsePath(object.Prefix)
 		if err != nil {
-			return sources, err
+			return lo.Uniq(sources), err
 		}
 		sources = append(sources, source)
 	}
 
-	return sources, nil
+	return lo.Uniq(sources), nil
 }
 
 // LookUp returns a single message by looking up the path `folder/key/source`.
@@ -89,34 +90,21 @@ func (g *GCSEventStore) LookUp(ctx context.Context, key, source string) (*event.
 
 // LookUpByKey returns a list of messages by looking up the prefix `folder/key/`.
 func (g *GCSEventStore) LookUpByKey(ctx context.Context, key string) ([]*event.Message, error) {
-	bucket := g.client.Bucket(g.cfg.Bucket)
-
 	messages := make([]*event.Message, 0)
-	listRequestCtx, cancel := g.cfg.NewContextWithTimeout(ctx, ListContents)
-	defer cancel()
+	sources, err := g.ListSourcesByKey(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	for _, source := range sources {
+		message, err := g.LookUp(ctx, key, source)
+		if err != nil {
+			return messages, err
+		}
+		if message == nil {
+			continue
+		}
 
-	sourceIterator := bucket.Objects(listRequestCtx, &gcs.Query{
-		Prefix:    composePath(g.cfg.Folder, key) + "/",
-		Delimiter: "/",
-	})
-	for {
-		path, err := sourceIterator.Next()
-		if errors.Is(err, iterator.Done) {
-			break
-		}
-		if err != nil {
-			return messages, err
-		}
-		readRequestCtx, _ := g.cfg.NewContextWithTimeout(ctx, ReadContent)
-		content, err := readFile(readRequestCtx, g.cfg.Compressor, bucket, path.Prefix, g.cfg.ReadPolicy)
-		if err != nil {
-			return messages, err
-		}
-		key, source, err := parsePath(path.Prefix)
-		if err != nil {
-			return messages, err
-		}
-		messages = append(messages, event.NewMessage(key, source, string(content)))
+		messages = append(messages, message)
 	}
 
 	return messages, nil
@@ -169,12 +157,11 @@ func readFile(
 	if err != nil {
 		return nil, err
 	}
+	if object == nil {
+		return nil, nil
+	}
 	reader, err := bucket.Object(object.Name).NewReader(ctx)
 	if err != nil {
-		if errors.Is(err, gcs.ErrObjectNotExist) {
-			return nil, nil
-		}
-
 		return nil, err
 	}
 	compressedContent, err := io.ReadAll(reader)

@@ -7,6 +7,7 @@ replace github.com/honestbank/event-driver => ../../../event-driver
 require (
 	cloud.google.com/go/storage v1.40.0
 	github.com/honestbank/event-driver v1.0.0
+	github.com/samber/lo v1.39.0
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/mock v0.4.0
 	google.golang.org/api v0.175.0
@@ -37,6 +38,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.25.0 // indirect
 	go.opentelemetry.io/otel/trace v1.25.0 // indirect
 	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17 // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/oauth2 v0.19.0 // indirect
