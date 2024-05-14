@@ -177,10 +177,6 @@ func readFile(
 	}
 	reader, err := bucket.Object(object.Name).NewReader(ctx)
 	if err != nil {
-		if errors.Is(err, gcs.ErrObjectNotExist) {
-			return nil, nil
-		}
-
 		return nil, err
 	}
 	compressedContent, err := io.ReadAll(reader)
