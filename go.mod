@@ -1,6 +1,6 @@
 module github.com/honestbank/event-driver
 
-go 1.21
+go 1.26.0
 
 require (
 	github.com/stretchr/testify v1.9.0

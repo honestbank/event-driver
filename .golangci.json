@@ -1,45 +1,71 @@
 {
-  "_ignore": "DO NOT MODIFY THIS FILE: https://github.com/honestbank/.github/blob/main/docs/about.md",
-  "run": {
-    "skip-files": [
-      "graph"
-    ],
-    "skip-dirs": [
-      ".*/generated/*"
-    ],
-    "skip-dirs-use-default": true,
-    "tests": true
-  },
-  "linters": {
-    "enable": [
-      "errcheck",
-      "gosimple",
-      "govet",
-      "ineffassign",
-      "staticcheck",
-      "typecheck",
-      "unused",
-      "gofmt",
-      "goimports",
-      "nestif",
-      "asciicheck",
-      "exhaustive",
-      "exportloopref",
-      "forbidigo",
-      "gocyclo",
-      "gofmt",
-      "goimports",
-      "makezero",
-      "misspell",
-      "nakedret",
-      "nestif",
-      "nilerr",
-      "nlreturn",
-      "nolintlint",
-      "testpackage",
-      "unconvert",
-      "wastedassign",
-      "whitespace"
-    ]
-  }
+    "formatters": {
+        "enable": [
+            "gofmt",
+            "goimports"
+        ],
+        "exclusions": {
+            "generated": "lax",
+            "paths": [
+                "graph",
+                ".*/generated/*",
+                "third_party$",
+                "builtin$",
+                "examples$"
+            ]
+        }
+    },
+    "linters": {
+        "enable": [
+            "asciicheck",
+            "copyloopvar",
+            "exhaustive",
+            "forbidigo",
+            "gocyclo",
+            "makezero",
+            "misspell",
+            "nakedret",
+            "nestif",
+            "nilerr",
+            "nlreturn",
+            "nolintlint",
+            "testpackage",
+            "unconvert",
+            "wastedassign",
+            "whitespace"
+        ],
+        "exclusions": {
+            "generated": "lax",
+            "paths": [
+                "graph",
+                ".*/generated/*",
+                "third_party$",
+                "builtin$",
+                "examples$"
+            ],
+            "presets": [
+                "comments",
+                "common-false-positives",
+                "legacy",
+                "std-error-handling"
+            ],
+            "rules": [
+                {
+                    "linters": [
+                        "errcheck"
+                    ],
+                    "path": "_test.go"
+                }
+            ]
+        },
+        "settings": {
+            "errcheck": {
+                "check-blank": true
+            }
+        }
+    },
+    "run": {
+        "tests": true
+    },
+    "version": "2"
 }
