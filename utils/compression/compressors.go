@@ -26,9 +26,12 @@ func (g gzipCompressor) Compress(input []byte) ([]byte, error) {
 		return input, nil
 	}
 	var buffer bytes.Buffer
-	gzipWriter, _ := gzip.NewWriterLevel(&buffer, g.level)
+	gzipWriter, err := gzip.NewWriterLevel(&buffer, g.level)
+	if err != nil {
+		return nil, err
+	}
 
-	_, err := gzipWriter.Write(input)
+	_, err = gzipWriter.Write(input)
 	if err != nil {
 		return nil, err
 	}
