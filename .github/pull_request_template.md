@@ -6,7 +6,7 @@
 
 -->
 
-## Pull Request Submission Checklist
+### Pull Request Submission Checklist
 
 Please confirm that you have done the following before requesting reviews:
 

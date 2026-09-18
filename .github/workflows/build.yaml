@@ -1,87 +1,96 @@
+# DO NOT CHANGE. This file is being managed from a central repository
+# To know more simply visit https://github.com/honestbank/.github/blob/main/docs/about.md
+
+# yamllint disable rule:line-length
+---
 name: go-tests
 
-on:
+permissions:
+  contents: read
+
+on:  # yamllint disable-line rule:truthy
   push:
     branches: [main]
   pull_request:
     branches: [main]
 
-env:
-  GOPRIVATE: github.com/honestbank
-  REPO_NAME: ${{ github.event.repository.name }}
+concurrency:
+  group: "${{ github.repository }}-${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  go-tests:
+  get-go-version:
+    name: Get Go Version
+    runs-on: ubuntu-latest
+    outputs:
+      go_version: ${{ steps.get-version.outputs.version }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Get Go Version from go.mod
+        id: get-version
+        run: |
+          GO_VERSION=$(grep -oP '^go \K[0-9]+\.[0-9]+' go.mod)
+          echo "Go Version: $GO_VERSION"
+          echo "version=$GO_VERSION" >> "$GITHUB_OUTPUT"
+
+  tests:
     name: go-tests
+    needs: [get-go-version]
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Golang
-        uses: actions/setup-go@v4
-        with:
-          go-version: "1.21"
-        id: go
-
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Test and generate code coverage on main module
-        run: make test
-
-      - name: Test and generate code coverage on extensions/cloudevents
-        run: |
-          cd extensions/cloudevents
-          make test
-      - run: tail -n +2 extensions/cloudevents/cover.out >> cover.out && rm extensions/cloudevents/cover.out
-
-      - name: Test and generate code coverage on extensions/google-cloud
-        run: |
-          cd extensions/google-cloud
-          make test
-      - run: tail -n +2 extensions/google-cloud/cover.out >> cover.out && rm extensions/google-cloud/cover.out
-
-      - name: Go lint
-        uses: golangci/golangci-lint-action@3a919529898de77ec3da873e3063ca4b10e7f5cc # v3.7.0
+      - name: Set up Golang
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c  # v6.4.0
         with:
-          version: latest
-          args: --timeout=5m --modules-download-mode=readonly
-          skip-pkg-cache: true
-          skip-build-cache: true
+          go-version: ${{ needs.get-go-version.outputs.go_version }}
+        id: go
 
-      - name: SonarCloud
-        uses: sonarsource/sonarcloud-github-action@ba3875ecf642b2129de2b589510c81a8b53dbf4e # master
+      - name: Test and generate code coverage
+        run: |
+          set -o pipefail
+          go test -race -coverprofile=coverage.txt -covermode=atomic -json ./... | tee test-report.json
+
+      - name: sonarcloud-scan
+        uses: sonarsource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f  # v8.2.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        continue-on-error: true
 
   release:
     name: semantic-release
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
-    needs: [go-tests]
+    needs: [get-go-version, tests]
     steps:
       - name: Set up Golang
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c  # v6.4.0
         with:
-          go-version: "1.21"
+          go-version: ${{ needs.get-go-version.outputs.go_version }}
         id: go
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Release
-        uses: cycjimmy/semantic-release-action@8e58d20d0f6c8773181f43eb74d6a05e3099571d # v3.4.2
+      - name: release
+        uses: cycjimmy/semantic-release-action@b12c8f6015dc215fe37bc154d4ad456dd3833c90  # v6.0.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ENGINEERING_GITHUB_PERSONAL_ACCESS_TOKEN }}
         with:
+          branch: ${{ github.event.repository.default_branch }}
           semantic_version: 19
           extra_plugins: |
             @semantic-release/git@10.0.1
-            @semantic-release/exec@6.0.2
-            @semantic-release/changelog@6.0.1

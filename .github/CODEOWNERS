@@ -1,3 +1,6 @@
+# DO NOT CHANGE. This file is being managed from a central repository
+# To know more simply visit https://github.com/honestbank/.github/blob/main/docs/about.md
+
 # This is a comment.
 # Each line is a file pattern followed by one or more owners.
 
@@ -5,4 +8,4 @@
 # the repo. Unless a later match takes precedence,
 # @global-owner1 and @global-owner2 will be requested for
 # review when someone opens a pull request.
-*       @honestbank/devops-engineers @honestbank/backend-engineers
+* @honestbank/backend-engineers @honestbank/l3-backend-engineers
