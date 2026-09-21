@@ -16,9 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Golang
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: "1.21"
+          go-version: "1.26"
         id: go
 
       - name: Check out code into the Go module directory
@@ -42,15 +42,13 @@ jobs:
       - run: tail -n +2 extensions/google-cloud/cover.out >> cover.out && rm extensions/google-cloud/cover.out
 
       - name: Go lint
-        uses: golangci/golangci-lint-action@3a919529898de77ec3da873e3063ca4b10e7f5cc # v3.7.0
+        uses: golangci/golangci-lint-action@82606bf257cbaff209d206a39f5134f0cfbfd2ee # v9.2.1
         with:
           version: latest
           args: --timeout=5m --modules-download-mode=readonly
-          skip-pkg-cache: true
-          skip-build-cache: true
 
       - name: SonarCloud
-        uses: sonarsource/sonarcloud-github-action@ba3875ecf642b2129de2b589510c81a8b53dbf4e # master
+        uses: sonarsource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -61,9 +59,9 @@ jobs:
     needs: [go-tests]
     steps:
       - name: Set up Golang
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: "1.21"
+          go-version: "1.26"
         id: go
 
       - uses: actions/setup-node@v3
