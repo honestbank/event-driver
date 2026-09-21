@@ -107,6 +107,20 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         continue-on-error: true
 
+      # These repositories are public, so they cannot reach the shared
+      # pre-commit workflow that lints our other Go code: that one lives in the
+      # internal workflows repository. We run golangci-lint here instead.
+      #
+      # This step comes last on purpose. SonarCloud Code Analysis is a required
+      # check, and a step that fails earlier in a job skips every step after it,
+      # so linting first would let a lint failure withhold the SonarCloud result
+      # and leave the pull request unable to merge at all.
+      - name: Go lint
+        uses: golangci/golangci-lint-action@82606bf257cbaff209d206a39f5134f0cfbfd2ee  # v9.2.1
+        with:
+          version: latest
+          args: --timeout=5m --modules-download-mode=readonly
+
   release:
     name: semantic-release
     permissions:
