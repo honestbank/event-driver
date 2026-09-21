@@ -1,0 +1,80 @@
+# yamllint disable rule:brackets rule:colons rule:line-length
+# This repository is public, so it cannot call the shared
+# go-version-check workflow: that lives in honestbank/workflows, which is
+# internal, and GitHub does not let a public repository consume a reusable
+# workflow from an internal one. This file is a local copy of the logic in
+# shared-go-version-check.yaml. Keep the two in sync.
+# To know more visit https://www.notion.so/honestbank/Go-Version-Update-Strategy-57bacdc4e9f244fb97227c137737248f
+---
+name: go-version-check
+permissions:
+  contents: read
+
+on: # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+jobs:
+  repository-go-version-check:
+    name: repository-go-version-check
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set repository current Go version
+        id: go-version-from-file
+        shell: bash
+        run: |
+          set -euo pipefail
+          go_version=$(grep -oP '^go \K[0-9]+\.[0-9]+' go.mod || echo "")
+          if [[ -z "$go_version" ]]; then
+            echo "Failed to extract Go version from go.mod"
+            exit 1
+          fi
+          echo "Current repo go version is ${go_version}"
+          echo "go_version=$go_version" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch the latest go version
+        id: fetch-latest-go-version
+        shell: bash
+        run: |
+          latest_go=$(curl -s https://go.dev/doc/devel/release | grep -Eo 'go[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -1)
+          echo "Latest go version is ${latest_go}"
+          echo "latest_go=$latest_go" >> "$GITHUB_OUTPUT"
+
+      - name: Evaluate the minimum required go version
+        id: set-min-go-version
+        shell: bash
+        env:
+          LATEST_GO: ${{ steps.fetch-latest-go-version.outputs.latest_go }}
+        run: |
+          latest_minor_version=$(echo "${LATEST_GO}" | cut -d '.' -f2)
+          go_minor=$((latest_minor_version-2))
+          go_minor_version=$(echo "${LATEST_GO}" | sed -E "s/\.([0-9]+){1}(\.[0-9]+)?/.$go_minor/" | sed 's/go//')
+          echo "Minimum go version is ${go_minor_version}"
+          echo "go_minor_version=$go_minor_version" >> "$GITHUB_OUTPUT"
+
+      - name: Validate if the min required go version is installed
+        shell: bash
+        env:
+          REPO_GO_VERSION: ${{ steps.go-version-from-file.outputs.go_version }}
+          MIN_GO_VERSION: ${{ steps.set-min-go-version.outputs.go_minor_version }}
+        run: |
+          if [ "$(printf '%s\n' "${MIN_GO_VERSION}" "${REPO_GO_VERSION}" | sort -V | head -n1)" = "${MIN_GO_VERSION}" ]; then
+            echo "Current version ${REPO_GO_VERSION} is greater than or equal to ${MIN_GO_VERSION}"
+          else
+            echo "Current version ${REPO_GO_VERSION} is less than ${MIN_GO_VERSION}"
+            echo "Please update go version to >= ${MIN_GO_VERSION}"
+            exit 1
+          fi

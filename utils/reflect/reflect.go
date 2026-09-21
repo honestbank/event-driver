@@ -7,7 +7,7 @@ import (
 func GetType(object interface{}) string {
 	pointers := ""
 	t := reflect.TypeOf(object)
-	for t.Kind() == reflect.Ptr {
+	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
 		pointers += "*"
 	}
