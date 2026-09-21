@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
     hooks:
       - id: end-of-file-fixer
       - id: trailing-whitespace
@@ -8,11 +8,11 @@ repos:
       - id: detect-aws-credentials
         args: [ '--allow-missing-credentials' ]
   - repo: https://github.com/golangci/golangci-lint
-    rev: v1.53.3
+    rev: c0d3ddc9cf3faa61a4e378e879ece580256d76e5  # frozen: v2.12.2
     hooks:
       - id: golangci-lint
   - repo: https://github.com/TekWizely/pre-commit-golang
-    rev: v1.0.0-rc.1
+    rev: f298c082154b2cb239fac06a4f452368e66e66dd  # frozen: v1.0.0-rc.4
     hooks:
       - id: go-fmt
       - id: go-imports
