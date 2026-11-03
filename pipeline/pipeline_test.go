@@ -3,6 +3,7 @@ package pipeline_test
 import (
 	"context"
 	"errors"
+	"runtime"
 	"testing"
 	"time"
 
@@ -125,4 +126,33 @@ func TestPipelineTimeout(t *testing.T) {
 			assert.Equal(t, testCase.expectedError, actualError)
 		})
 	}
+}
+
+type blockingHandler struct {
+	release chan struct{}
+}
+
+func (h *blockingHandler) Process(_ context.Context, _ *event.Message, _ handlers.CallNext) error {
+	<-h.release
+
+	return nil
+}
+
+func TestPipelineTimeoutDoesNotLeakGoroutine(t *testing.T) {
+	handler := &blockingHandler{release: make(chan struct{})}
+	testPipeline := pipeline.New().WithNextHandler(handler)
+	before := runtime.NumGoroutine()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
+	defer cancel()
+	err := testPipeline.Process(ctx, nil)
+	assert.Equal(t, errors.New("pipeline timed out"), err)
+
+	// the handler ignores the context, so it ends only after release
+	close(handler.release)
+	deadline := time.Now().Add(time.Second)
+	for runtime.NumGoroutine() > before && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
+	}
+	assert.LessOrEqual(t, runtime.NumGoroutine(), before)
 }
