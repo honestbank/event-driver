@@ -52,7 +52,7 @@ func (p *pipeline) Process(ctx context.Context, in *event.Message) error {
 		index := i
 		processNext := process
 		process = func(handlerCtx context.Context, message *event.Message) error {
-			errorChan := make(chan error)
+			errorChan := make(chan error, 1)
 			go func(index int, errorChan chan error) {
 				errorChan <- p.handlers[index].Process(handlerCtx, message, processNext)
 			}(index, errorChan)
