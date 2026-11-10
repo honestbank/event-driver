@@ -1,6 +1,6 @@
 module github.com/honestbank/event-driver/extensions/cloudevents
 
-go 1.26
+go 1.26.10
 
 replace github.com/honestbank/event-driver => ../../../event-driver
 
