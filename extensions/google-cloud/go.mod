@@ -1,6 +1,6 @@
 module github.com/honestbank/event-driver/extensions/google-cloud
 
-go 1.26.10
+go 1.26.11
 
 replace github.com/honestbank/event-driver => ../../../event-driver
 
